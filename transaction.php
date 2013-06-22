@@ -275,7 +275,7 @@ class Transaction extends MyBlockChainRecord
   }
 }
 
-class TransactionVout extends BTCPHP {
+class TransactionVout extends MyBlockChainRecord {
 
   var $vout_id;
   var $transaction_id;
@@ -318,7 +318,7 @@ class TransactionVout extends BTCPHP {
           MyBlockChain::$db->doinsert($aisql);
           $aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values ($transaction_id, $vout_id, $address_id, (".$vout['value']."))";
           MyBlockChain::$db->doinsert($aisql);
-          BTCPHP::$addressUpdates[] = $address;
+          MyBlockChainRecord::$addressUpdates[] = $address;
         }
       }
     }
@@ -335,7 +335,7 @@ class TransactionVout extends BTCPHP {
 }
 
 
-class TransactionVin extends BTCPHP {
+class TransactionVin extends MyBlockChainRecord {
 
 
   public static $vins;

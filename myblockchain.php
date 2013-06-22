@@ -166,7 +166,7 @@ class MyBlockChainRecord
 
     if (!isset($args['onError']))
     {
-      if (is_function(MyBlockChain::$onError))
+      if (is_callable(MyBlockChain::$onError))
       {
         $this->onError = MyBlockChain::$onError;
       }
@@ -181,7 +181,7 @@ class MyBlockChainRecord
       }
     } else if (!is_object($args['btcd']))
     {
-      if (is_array($args['btcd'])
+      if (is_array($args['btcd']))
       { //todo: accept associate array
 
 
@@ -202,7 +202,7 @@ class MyBlockChainRecord
       }
     } else if (!is_object($args['db']))
     {
-      if (is_array($args['db'])
+      if (is_array($args['db']))
       { //todo: accept associate array
 
 
@@ -217,7 +217,7 @@ class MyBlockChainRecord
 
   private function updated($msg)
   {
-    if (is_function($this->onUpdate))
+    if (is_callable($this->onUpdate))
     {
       $this->onUpdate($msg);
     }
@@ -226,7 +226,7 @@ class MyBlockChainRecord
 
   private function error($msg)
   {
-    if (is_function($this->onError))
+    if (is_callable($this->onError))
     {
       $this->onError($msg);
     } else {

@@ -12,7 +12,6 @@ class MyBaseObj
 
   public static function addHook($event, $func)
   {
-    echo "Adding hook $event";
     self::$hooks[$event][] = $func;
   }
 
@@ -52,7 +51,7 @@ class MyBaseObj
 
 }
 
-
+//todo: wallet?
 class MyBlockChain extends MyBaseObj
 {
 
@@ -65,10 +64,6 @@ class MyBlockChain extends MyBaseObj
 
   static public $addressUpdates;
   static public $addressLastUpdated;
-
-
-
-
 
   public function __construct($args)
   {
@@ -145,7 +140,6 @@ class MyBlockChain extends MyBaseObj
       }
     }
 
-    MyBlockChain::log("Starting Scan");
     if (empty(self::$lastScannedBlock))
     {
       $lastScannedBlock = MyBlockChain::$db->getval("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
@@ -169,7 +163,6 @@ class MyBlockChain extends MyBaseObj
     }
     self::$lastScannedBlock = $newtxs['lastblock'];
     self::$lastScannedCount = count($newtxs['transactions']);
-    echo "scanned";
     self::broadcastUpdates();
   }
 

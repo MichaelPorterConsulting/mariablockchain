@@ -201,7 +201,7 @@ class Transaction extends MyBlockChainRecord
       if (MyBlockChain::$db->getval($csql) > 0)
       {
         echo "found, broadcasting update\n";
-        MyBlockChain::broadcast(json_encode($entry), $entry['address']);
+        //MyBlockChain::broadcast(json_encode($entry), $entry['address']);
       }
     }
   }
@@ -255,7 +255,7 @@ class Transaction extends MyBlockChainRecord
     {
       foreach ($vouts as $vout)
       {
-        $vout_id = vOut::getID($transaction_id, $vout);
+        $vout_id = TransactionVout::getID($transaction_id, $vout);
       }
     }
   }
@@ -269,7 +269,7 @@ class Transaction extends MyBlockChainRecord
     {
       foreach ($vins as $vin)
       {
-        $vin_id = vIn::getID($transaction_id, $vin, $distanceAway++, ($distanceAway <= self::$maxScanDistance));
+        $vin_id = TransactionVin::getID($transaction_id, $vin, $distanceAway++, ($distanceAway <= self::$maxScanDistance));
       }
     }
   }
@@ -296,7 +296,7 @@ class TransactionVout extends MyBlockChainRecord {
 
   public function getID($transaction_id, $vout)
   {
-    self::log("vOut::getId $transaction_id $vout");
+    self::log("TransactionVout::getId $transaction_id $vout");
     //echo "processing vout\n";
     $voutsID = $transaction_id."-".$vout;
     if (isset(self::$vouts["$voutsID"]) && self::$vouts["$voutsID"]['vout_id'] > 0)
@@ -343,7 +343,7 @@ class TransactionVin extends MyBlockChainRecord {
   public function getID($transaction_id, $vin, $distanceAway = 0, $followtx = true)
   {
 
-    self::log("vIn::getId $transaction_id".json_encode($vin));
+    self::log("TransactionVin::getId $transaction_id".json_encode($vin));
 
     if ($vin['txid'] && isset($vin['vout']))
     {

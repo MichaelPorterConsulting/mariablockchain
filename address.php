@@ -220,4 +220,57 @@ class Address extends MyBlockChainRecord
     $ledgerSQL = "select addresses_ledger.ledger_id as ledger_id, addresses_ledger.amount as amount, transactions.txid as txid, transactions.time as txtime, transactions.confirmations as confirmations from addresses inner join addresses_ledger on addresses.address_id = addresses_ledger.address_id inner join transactions on addresses_ledger.transaction_id = transactions.transaction_id where addresses.address = '$address'";
     return MyBlockChain::$db->gethashrows($ledgerSQL);
   }
+
+
+  public static function getSent($address)
+  {
+
+    //todo: optimize joins / inputs once testing is easier.. seems to work for now
+    $sentSQL = "select
+      receivingAddresses.address as address,
+      receivingVouts.value as value,
+      (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
+      (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
+      (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
+      receivingVouts.vout_id as vout_id
+      from addresses as targetAddresses
+      left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
+      left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
+      left join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id
+      left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
+      left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
+      left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
+      where targetAddresses.address = \"".MyBlockChain::$db->clean($address)."\"";
+      //echo json_encode(MyBlockChain::$db->gethashrows($sentSQL));
+      return MyBlockChain::$db->gethashrows($sentSQL);
+  }
+
+  public static function getReceived($address)
+  {
+    //self::getInputs($address);
+    //todo: optimize joins / inputs... experiment with 'change' more
+    //todo: time in db relates to when the database record was added, fiddle with other options
+    //todo: consider adding support for aliases
+    $receivedSQL = "select
+      sendingAddresses.address as address,
+      transactions_vouts.value as value,
+      (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
+      (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
+      (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
+      transactions_vouts.vout_id as vout_id
+      from addresses as targetAddresses
+      left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
+      left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
+      left outer join transactions_vins on transactions_vins.transaction_id = transactions_vouts.transaction_id
+      left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id
+      left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id
+      left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
+      where targetAddresses.address = \"".MyBlockChain::$db->clean($address)."\" and targetAddresses.address_id != sendingAddresses.address_id";
+     // echo json_encode(MyBlockChain::$db->gethashrows($receivedSQL));
+
+      //echo $receivedSQL;
+
+      return MyBlockChain::$db->gethashrows($receivedSQL);
+  }
+
 }

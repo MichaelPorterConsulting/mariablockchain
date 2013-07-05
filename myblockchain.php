@@ -4,8 +4,6 @@ require_once "account.php";
 require_once "address.php";
 require_once "transaction.php";
 
-
-
 class MyBlockChain
 {
 

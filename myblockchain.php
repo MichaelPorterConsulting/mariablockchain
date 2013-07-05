@@ -4,10 +4,62 @@ require_once "account.php";
 require_once "address.php";
 require_once "transaction.php";
 
+<<<<<<< HEAD
 class MyBlockChain
+=======
+
+class MyBaseObj
+{
+  static public $hooks;
+
+
+  public static function addHook($event, $func)
+  {
+    self::$hooks[$event][] = $func;
+  }
+
+  public static function log($msg)
+  {
+    if (isset(self::$hooks['log']) && count(self::$hooks['log']) > 0)
+    {
+      foreach (self::$hooks['log'] as $hook)
+      {
+        if (is_callable($hook))
+        {
+          $hook($msg);
+        } else {
+          var_dump($hook);
+        }
+      }
+
+    }
+  }
+
+  public static function error($msg)
+  {
+    if (isset(self::$hooks['error']) && count(self::$hooks['error']) > 0)
+    {
+      foreach (self::$hooks['error'] as $hook)
+      {
+        if (is_callable($hook))
+        {
+          $hook($msg);
+        } else {
+          var_dump($hook);
+        }
+      }
+
+    }
+  }
+
+}
+
+//todo: wallet?
+class MyBlockChain extends MyBaseObj
+>>>>>>> willworking
 {
 
-  static public $btcd;
+  static public $bitcoin;
   static public $db;
 
   //todo: memcache
@@ -62,13 +114,6 @@ class MyBlockChain
     MyBlockChain::$db->doupdate("delete from transactions_details");
   }
 
-
-  public static function log($msg)
-  {
-
-    MyBlockChain::log($msg);
-  }
-
   /*
   *
   * looks for new transactions, updates database if found
@@ -79,27 +124,26 @@ class MyBlockChain
   {
 
     $timenow = time();
-     if (count(Transaction::$transactions) > 0)
+    if (count(Transaction::$transactions) > 0)
+    {
+      foreach (Transaction::$transactions as $cached_txid => $cached_tx)
       {
-        foreach (Transaction::$transactions as $cached_txid => $cached_tx)
+        $doUpdate = false;
+        if ($cached_tx['confirmations'] < 1 && $cached_tx['lastScanned'] < $timenow - 10)
         {
-          $doUpdate = false;
-          if ($cached_tx['confirmations'] < 1 && $cached_tx['lastScanned'] < $timenow - 10)
-          {
-            $doUpdate = true;
-          } else if ($cached_tx['confirmations'] < 3 && $cached_tx['lastScanned'] < $timenow - 60) {
-            $doUpdate = true;
-          }
+          $doUpdate = true;
+        } else if ($cached_tx['confirmations'] < 3 && $cached_tx['lastScanned'] < $timenow - 60) {
+          $doUpdate = true;
+        }
 
-          if ($doUpdate)
-          {
-            echo "forcing update $cached_txid for not enough confirmations\n";
-            Transaction::getID($cached_txid, 0, true, true);
-          }
+        if ($doUpdate)
+        {
+          echo "forcing update $cached_txid for not enough confirmations\n";
+          Transaction::getID($cached_txid, 0, true, true);
         }
       }
+    }
 
-    //MyBlockChain::log("Starting Scan");
     if (empty(self::$lastScannedBlock))
     {
       $lastScannedBlock = MyBlockChain::$db->getval("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
@@ -109,10 +153,10 @@ class MyBlockChain
       }
       self::$lastScannedBlock = $lastScannedBlock;
     }
-
     //MyBlockChain::log("Last scanned block ".self::$lastScannedBlock);
 
     $newtxs = MyBlockChain::$bitcoin->listsinceblock(self::$lastScannedBlock);
+
     if (count($newtxs['transactions']) > 0 && ($newtxs['lastblock'] != self::$lastScannedBlock || count($newtxs['transactions']) > self::$lastScannedCount))
     {
       MyBlockChain::log(self::$lastScannedCount - count($newtxs)." new transactions found\n");
@@ -129,28 +173,32 @@ class MyBlockChain
   //todo: anything directly relating to websockets needs to be moved
   public static function broadcastUpdates()
   {
-    if (BTCPHP::$addressUpdates)
-      BTCPHP::$addressUpdates = array_unique(BTCPHP::$addressUpdates);
+    /*
+    if (MyBlockChain::$addressUpdates)
+      MyBlockChain::$addressUpdates = array_unique(MyBlockChain::$addressUpdates);
 
-    if (count(BTCPHP::$addressUpdates) > 0)
-      for ($x = 0; $x < count(BTCPHP::$addressUpdates); $x++)
+    if (count(MyBlockChain::$addressUpdates) > 0)
+      for ($x = 0; $x < count(MyBlockChain::$addressUpdates); $x++)
       {
-        $address = array_shift(BTCPHP::$addressUpdates);
+        $address = array_shift(MyBlockChain::$addressUpdates);
 
-        if (!BTCPHP::$addressLastUpdated[$address])
-          BTCPHP::$addressLastUpdated[$address] = "2012-12-21 21:12:21";
+        if (!MyBlockChain::$addressLastUpdated[$address])
+          MyBlockChain::$addressLastUpdated[$address] = "2012-12-21 21:12:21";
 
-        $ledgerItems = Address::getLedger($address, BTCPHP::$addressLastUpdated[$address]);
+        $ledgerItems = Address::getLedger($address, MyBlockChain::$addressLastUpdated[$address]);
         foreach ($ledgerItems as $ledgerItem)
         {
           MyBlockChain::broadcast(json_encode($ledgerItem), $address);
         }
-        BTCPHP::$addressLastUpdated[$address] = date("Y-m-d H:i:s");
-      }
+        MyBlockChain::$addressLastUpdated[$address] = date("Y-m-d H:i:s");
+      }*/
   }
+
+
+
 }
 
-class MyBlockChainRecord
+class MyBlockChainRecord extends MyBaseObj
 {
 
   var $onUpdate;
@@ -164,7 +212,7 @@ class MyBlockChainRecord
 
     if (!isset($args['onError']))
     {
-      if (is_function(MyBlockChain::$onError))
+      if (is_callable(MyBlockChain::$onError))
       {
         $this->onError = MyBlockChain::$onError;
       }
@@ -173,13 +221,13 @@ class MyBlockChainRecord
     /* setup bitcoind rpc connection */
     if (empty($args['btcd']))
     { //if nothing sent use default if connected
-      if (is_object(MyBlockChain::$btcd))
+      if (is_object(MyBlockChain::$bitcoin))
       {
-        $this->btcd = MyBlockChain::$btcd;
+        $this->btcd = MyBlockChain::$bitcoin;
       }
     } else if (!is_object($args['btcd']))
     {
-      if (is_array($args['btcd'])
+      if (is_array($args['btcd']))
       { //todo: accept associate array
 
 
@@ -200,7 +248,7 @@ class MyBlockChainRecord
       }
     } else if (!is_object($args['db']))
     {
-      if (is_array($args['db'])
+      if (is_array($args['db']))
       { //todo: accept associate array
 
 
@@ -215,23 +263,12 @@ class MyBlockChainRecord
 
   private function updated($msg)
   {
-    if (is_function($this->onUpdate))
+    if (is_callable($this->onUpdate))
     {
       $this->onUpdate($msg);
     }
   }
 
-
-  private function error($msg)
-  {
-    if (is_function($this->onError))
-    {
-      $this->onError($msg);
-    } else {
-      echo $msg;
-      die;
-    }
-  }
 }
 
 

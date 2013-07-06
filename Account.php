@@ -15,6 +15,21 @@ class Account extends BlockChainObject
     $this->account = $account;
   }
 
+  /**
+  *
+  * get primary key id for account or creates if not yet in db
+  *
+  *
+  * @param string account name of account to fetch id for
+  *
+  * <code>
+  * <?php
+  *
+  * $account_id = Account::getID('foobar');
+  *
+  * ?>
+  * </code>
+   */
   function getID($account)
   {
     self::log("Looking up account $account");

@@ -3,6 +3,9 @@
 namespace MariaBlockChain;
 
 require_once "BlockChain.php";
+require_once "TransactionInput.php";
+require_once "TransactionOutput.php";
+
 
 class Transaction extends BlockChainObject
 {
@@ -25,6 +28,28 @@ class Transaction extends BlockChainObject
     $this->fullyloaded = false;
   }
 
+  /**
+  *
+  * get primary key id for transaction or creates if not yet in db. updates db if stale.. kinda greasy, love forthcoming
+  *
+  *
+  * @param string txid transactions txid
+  * @param boolean forceScan
+  * @param integer distanceAway also scan in transactions this many degrees away
+  * @param string forceUpdate
+
+  *
+  * <code>
+  * <?php
+  *
+  * $transaction_id = Transaction::getID('foobar');
+  *
+  * ?>
+  * </code>
+   */
+
+  //todo: refactor
+  //todo: whilst refactoring remember what the difference between forceScan and forceUpdate is and rename one
   public static function getID($txid, $forceScan = false, $distanceAway = 1, $forceUpdate = false)
   {
     self::log("Transaction::getID $txid");
@@ -166,7 +191,7 @@ class Transaction extends BlockChainObject
     }
   }
 
-
+  //todo: looks like garbage, toast it
   public static function getTransactionAddresses($transaction_id)
   {
     $addresses = array();
@@ -182,6 +207,7 @@ class Transaction extends BlockChainObject
 
   }
 
+  //todo: toast this and replace functionality by setting the onUpdate lambda when initializing
   public static function broadcastUpdate($transaction_id)
   {
     echo "Broadcasting updates\n";
@@ -202,6 +228,25 @@ class Transaction extends BlockChainObject
     }
   }
 
+
+  /**
+  *
+  * retrieves info about a transaction
+  *
+  *
+  * @param string txid transactions txid
+  * @param boolean forceScan
+  *
+  * <code>
+  * <?php
+  *
+  * $txInfo = Transaction::getInfo('foobar');
+  *
+  * ?>
+  * </code>
+   */
+
+  //todo: what's this ismine shit? toast it
   public static function getInfo($txid, $ismine = false)
   {
     self::log("Transaction::getInfo $txid");
@@ -209,6 +254,23 @@ class Transaction extends BlockChainObject
     return $info;
   }
 
+
+  /**
+  *
+  * retrieves the raw transaction
+  *
+  *
+  * @param string txid transaction txid
+  * @param boolean forceUpdate
+  *
+  * <code>
+  * <?php
+  *
+  * $txRaw = Transaction::getRawInfo('foobar');
+  *
+  * ?>
+  * </code>
+   */
   public static function getRawInfo($txid, $forceUpdate = false)
   {
     self::log("Transaction::getRawInfo $txid");
@@ -221,7 +283,23 @@ class Transaction extends BlockChainObject
   }
 
 
+  /**
+  *
+  * meh
+  *
+  *
+  * @param string txid transaction txid
+  *
+  * <code>
+  * <?php
+  *
+  * $txRaw = Transaction::getRawInfo('foobar');
+  *
+  * ?>
+  * </code>
+   */
 
+  //todo: i get why i wrote it but don't see the point in keeping it, kill when safe
   public static function detailsScan($txid)
   {
     self::log("Transaction::detailsScan $txid");
@@ -242,6 +320,23 @@ class Transaction extends BlockChainObject
     }
   }
 
+  /**
+  *
+  * ensures the transactions related vouts representation in the database is up to date
+  *
+  *
+  * @param integer transaction_id transaction txid
+  * @param array vouts array of associated vouts to add
+  *
+  * <code>
+  * <?php
+  *
+  * $txRaw = Transaction::vOutScan('foobar');
+  *
+  * ?>
+  * </code>
+   */
+  //todo: make second argument optional, if not set get vouts from bitcoind jsonrpc
   public function vOutScan($transaction_id, $vouts)
   {
     self::log("Transaction::vOutScan $transaction_id ".json_encode($vouts));
@@ -256,6 +351,24 @@ class Transaction extends BlockChainObject
     }
   }
 
+  /**
+  *
+  * ensures the transactions related vins representation in the database is up to date
+  *
+  *
+  * @param integer transaction_id transaction txid
+  * @param array vins array of associated vouts to add
+  * @param integer distanceAway current recursion level
+  *
+  * <code>
+  * <?php
+  *
+  * $txRaw = Transaction::vOutScan('foobar');
+  *
+  * ?>
+  * </code>
+   */
+  //todo: make second argument optional, if not set get vins from bitcoind jsonrpc
   public function vInScan($transaction_id, $vins, $distanceAway = 0)
   {
     self::log("Transaction::vInScan $transaction_id ".json_encode($vins));
@@ -271,133 +384,4 @@ class Transaction extends BlockChainObject
   }
 }
 
-class TransactionVout extends BlockChainRecord {
 
-  var $vout_id;
-  var $transaction_id;
-  var $value;
-  var $n;
-  var $asm;
-  var $hex;
-  var $reqSigs;
-  var $type;
-  var $txid;
-
-  public static $vouts;
-
-  public function __construct()
-  {
-
-  }
-
-  public function getID($transaction_id, $vout)
-  {
-    self::log("TransactionVout::getId $transaction_id $vout");
-    //echo "processing vout\n";
-    $voutsID = $transaction_id."-".$vout;
-    if (isset(self::$vouts["$voutsID"]) && self::$vouts["$voutsID"]['vout_id'] > 0)
-    {
-      $vout_id = self::$vouts["$voutsID"]['vout_id'];
-    } else {
-      $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = $transaction_id and n = ".$vout['n'];
-      $vout_id = BlockChain::$db->value($voutIDSQL);
-      if (!$vout_id)
-      {
-        $vosql = "insert into transactions_vouts (transaction_id, txid, value, n, asm, hex, reqSigs, type) values (".$transaction_id.",'".$tx['txid']."','".$vout['value']."','".$vout['n']."','".$vout["scriptPubKey"]['asm']."','".$vout["scriptPubKey"]['hex']."','".$vout["scriptPubKey"]['reqSigs']."','".$vout["scriptPubKey"]['type']."')";
-        //echo  "\n\n$vosql\n\n";
-        $vout_id = BlockChain::$db->insert($vosql);
-
-        foreach ($vout["scriptPubKey"]['addresses'] as $address)
-        {
-          $address_id = Address::getID($address);
-          $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values ($vout_id, $address_id)";
-          BlockChain::$db->insert($aisql);
-          $aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values ($transaction_id, $vout_id, $address_id, (".$vout['value']."))";
-          BlockChain::$db->insert($aisql);
-          BlockChainRecord::$addressUpdates[] = $address;
-        }
-      }
-    }
-
-    return $vout_id;
-  }
-
-  public function getInfo()
-  {
-
-  }
-
-
-}
-
-
-class TransactionVin extends BlockChainRecord {
-
-
-  public static $vins;
-
-  public function getID($transaction_id, $vin, $distanceAway = 0, $followtx = true)
-  {
-
-    self::log("TransactionVin::getId $transaction_id".json_encode($vin));
-
-    if ($vin['txid'] && isset($vin['vout']))
-    {
-      $vinsID = $vin['txid']."-".$vin['vout'];
-      if (isset(self::$vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0)
-      {
-        $vin_id = $vins[$vinsID]['vin_id'];
-      } else {
-        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and vout = ".$vin['vout']);
-        if (!$vin_id)
-        {
-          if ($followtx)
-          {
-            $vinvout_transaction_id = Transaction::getID($vin['txid'], false, $distanceAway += 1);
-            $vin_vout_id = BlockChain::$db->value("select vout_id from transactions_vouts where transaction_id = $vinvout_transaction_id and n = ".$vin['vout']);
-          } else {
-            $vin_vout_id = null;
-          }
-
-          $visql = "insert into transactions_vins (transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id)  values ('".$transaction_id."','".$vin['txid']."','".$vin['vout']."','".$vin['scriptSig']['asm']."','".$vin['scriptSig']['hex']."','".$vin['sequence']."','".$vin['coinbase']."', '$vin_vout_id')";
-          $vin_id = BlockChain::$db->insert($visql);
-
-          if ($vin_vout_id)
-          {
-            $vinvoutaddresses = BlockChain::$db->assocs("select transactions_vouts_addresses.address_id as address_id, transactions_vouts.value as amount from transactions_vouts_addresses inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id where transactions_vouts_addresses.vout_id = $vin_vout_id");
-            if (count($vinvoutaddresses) > 0)
-            {
-              foreach ($vinvoutaddresses as $vinaddress)
-              {
-                  $aisql = "insert into addresses_ledger (transaction_id, vout_id, vin_id, address_id, amount) values ($transaction_id, $vin_vout_id, $vin_id, ".$vinaddress['address_id'].", ".$vinaddress['amount']." * -1)";
-                  BlockChain::$db->insert($aisql);
-              }
-            }
-          }
-        }
-      }
-    } else if ($vin['sequence'] > 0 && !empty($vin['coinbase'])) { // Generation
-      $vinsID = $vin['txid']."-".$vin['vout'];
-      if (isset(self::$vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0)
-      {
-        $vin_id = $vins[$vinsID]['vin_id'];
-      } else {
-        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and sequence = '".$vin['sequence']."' and coinbase = '".$vin['coinbase']."'");
-
-        if (!$vin_id)
-        {
-          $visql = "insert into transactions_vins (transaction_id, sequence, coinbase, vout_id)  values ('".$transaction_id."','".$vin['sequence']."','".$vin['coinbase']."', 0)";
-          $vin_id = BlockChain::$db->insert($visql);
-
-        }
-      }
-    } else {
-      self::log("can not compute input ".json_encode($vin));
-    }
-
-
-
-    self::$vins["{$transaction_id}-{$vin}"]["vin_id"] = $vin_id;
-    return $vin_id;
-  }
-}

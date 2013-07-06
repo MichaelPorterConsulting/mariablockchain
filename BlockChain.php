@@ -1,10 +1,12 @@
 <?php
 
-require_once "account.php";
-require_once "address.php";
-require_once "transaction.php";
+namespace MariaBlockChain;
 
-class MyBasicObject
+require_once "Account.php";
+require_once "Address.php";
+require_once "Transaction.php";
+
+class BasicObject
 {
   static public $hooks;
 
@@ -23,7 +25,7 @@ class MyBasicObject
         {
           $hook($msg);
         } else {
-          var_dump($hook);
+          //var_dump($hook);
         }
       }
 
@@ -40,7 +42,7 @@ class MyBasicObject
         {
           $hook($msg);
         } else {
-          var_dump($hook);
+          error_log($msg);
         }
       }
 
@@ -49,7 +51,7 @@ class MyBasicObject
 
 }
 
-class MyBlockChain extends MyBaseObj
+class BlockChain extends BasicObject
 {
 
   static public $bitcoin;
@@ -78,7 +80,7 @@ class MyBlockChain extends MyBaseObj
     $filtersql = rtrim($filtersql, ',');
 
     $sql = 'select $pkfld from $table $filtersql';
-    $id = MyBlockChain::$db->getval($sql);
+    $id = BlockChain::$db->getval($sql);
     if (!$id && $doInsert)
     {
       foreach ($filters as $filter => $fval)
@@ -90,7 +92,7 @@ class MyBlockChain extends MyBaseObj
       $ivals = rtrim($ivals,',');
 
       $isql = "insert into $table ($iflds) values ($ivals)";
-      $id = MyBlockChain::$db->doinsert($isql);
+      $id = BlockChain::$db->doinsert($isql);
     }
     return $id;
   }*/
@@ -98,13 +100,13 @@ class MyBlockChain extends MyBaseObj
   public function clearDatabase()
   {
     //echo "Clearing out database\n";
-    MyBlockChain::$db->doupdate("delete from transactions");
-    MyBlockChain::$db->doupdate("delete from transactions_vouts");
-    MyBlockChain::$db->doupdate("delete from transactions_vouts_addresses");
-    MyBlockChain::$db->doupdate("delete from transactions_vins");
-    MyBlockChain::$db->doupdate("delete from addresses");
-    MyBlockChain::$db->doupdate("delete from accounts");
-    MyBlockChain::$db->doupdate("delete from transactions_details");
+    BlockChain::$db->update("delete from transactions");
+    BlockChain::$db->update("delete from transactions_vouts");
+    BlockChain::$db->update("delete from transactions_vouts_addresses");
+    BlockChain::$db->update("delete from transactions_vins");
+    BlockChain::$db->update("delete from addresses");
+    BlockChain::$db->update("delete from accounts");
+    BlockChain::$db->update("delete from transactions_details");
   }
 
   /*
@@ -117,6 +119,7 @@ class MyBlockChain extends MyBaseObj
   {
 
     $timenow = time();
+    //todo: memcache
     if (count(Transaction::$transactions) > 0)
     {
       foreach (Transaction::$transactions as $cached_txid => $cached_tx)
@@ -139,20 +142,20 @@ class MyBlockChain extends MyBaseObj
 
     if (empty(self::$lastScannedBlock))
     {
-      $lastScannedBlock = MyBlockChain::$db->getval("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
+      $lastScannedBlock = BlockChain::$db->getval("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
       if (!$lastScannedBlock)
       {
         $lastScannedBlock = "";
       }
       self::$lastScannedBlock = $lastScannedBlock;
     }
-    //MyBlockChain::log("Last scanned block ".self::$lastScannedBlock);
+    //BlockChain::log("Last scanned block ".self::$lastScannedBlock);
 
-    $newtxs = MyBlockChain::$bitcoin->listsinceblock(self::$lastScannedBlock);
+    $newtxs = BlockChain::$bitcoin->listsinceblock(self::$lastScannedBlock);
 
     if (count($newtxs['transactions']) > 0 && ($newtxs['lastblock'] != self::$lastScannedBlock || count($newtxs['transactions']) > self::$lastScannedCount))
     {
-      MyBlockChain::log(self::$lastScannedCount - count($newtxs)." new transactions found\n");
+      BlockChain::log(self::$lastScannedCount - count($newtxs)." new transactions found\n");
       foreach ($newtxs['transactions'] as $newtx)
       {
         $transaction_id = Transaction::getID($newtx['txid'], true, 0);
@@ -167,29 +170,29 @@ class MyBlockChain extends MyBaseObj
   public static function broadcastUpdates()
   {
     /*
-    if (MyBlockChain::$addressUpdates)
-      MyBlockChain::$addressUpdates = array_unique(MyBlockChain::$addressUpdates);
+    if (BlockChain::$addressUpdates)
+      BlockChain::$addressUpdates = array_unique(BlockChain::$addressUpdates);
 
-    if (count(MyBlockChain::$addressUpdates) > 0)
-      for ($x = 0; $x < count(MyBlockChain::$addressUpdates); $x++)
+    if (count(BlockChain::$addressUpdates) > 0)
+      for ($x = 0; $x < count(BlockChain::$addressUpdates); $x++)
       {
-        $address = array_shift(MyBlockChain::$addressUpdates);
+        $address = array_shift(BlockChain::$addressUpdates);
 
-        if (!MyBlockChain::$addressLastUpdated[$address])
-          MyBlockChain::$addressLastUpdated[$address] = "2012-12-21 21:12:21";
+        if (!BlockChain::$addressLastUpdated[$address])
+          BlockChain::$addressLastUpdated[$address] = "2012-12-21 21:12:21";
 
-        $ledgerItems = Address::getLedger($address, MyBlockChain::$addressLastUpdated[$address]);
+        $ledgerItems = Address::getLedger($address, BlockChain::$addressLastUpdated[$address]);
         foreach ($ledgerItems as $ledgerItem)
         {
-          MyBlockChain::broadcast(json_encode($ledgerItem), $address);
+          BlockChain::broadcast(json_encode($ledgerItem), $address);
         }
-        MyBlockChain::$addressLastUpdated[$address] = date("Y-m-d H:i:s");
+        BlockChain::$addressLastUpdated[$address] = date("Y-m-d H:i:s");
       }*/
   }
 
 }
 
-class MyBlockChainObject extends MyBasicObject
+class BlockChainObject extends BasicObject
 {
 
   var $onUpdate;
@@ -203,18 +206,18 @@ class MyBlockChainObject extends MyBasicObject
 
     if (!isset($args['onError']))
     {
-      if (is_callable(MyBlockChain::$onError))
+      if (is_callable(BlockChain::$onError))
       {
-        $this->onError = MyBlockChain::$onError;
+        $this->onError = BlockChain::$onError;
       }
     }
 
     /* setup bitcoind rpc connection */
     if (empty($args['btcd']))
     { //if nothing sent use default if connected
-      if (is_object(MyBlockChain::$bitcoin))
+      if (is_object(BlockChain::$bitcoin))
       {
-        $this->btcd = MyBlockChain::$bitcoin;
+        $this->btcd = BlockChain::$bitcoin;
       }
     } else if (!is_object($args['btcd']))
     {
@@ -231,9 +234,9 @@ class MyBlockChainObject extends MyBasicObject
     /* setup database connection */
     if (empty($args['db']))
     {
-      if (is_object(MyBlockChain::$db))
+      if (is_object(BlockChain::$db))
       {
-        $this->db = MyBlockChain::$db;
+        $this->db = BlockChain::$db;
       } else {
         $this->error("no db connection");
       }

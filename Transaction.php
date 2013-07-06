@@ -1,9 +1,10 @@
 <?php
 
-require_once "myblockchain.php";
+namespace MariaBlockChain;
 
+require_once "BlockChain.php";
 
-class Transaction extends MyBlockChainRecord
+class Transaction extends BlockChainObject
 {
   var $id;
   var $txid;
@@ -24,11 +25,6 @@ class Transaction extends MyBlockChainRecord
     $this->fullyloaded = false;
   }
 
-  public function __get($fld)
-  {
-    return $this->full['fld'];
-  }
-
   public static function getID($txid, $forceScan = false, $distanceAway = 1, $forceUpdate = false)
   {
     self::log("Transaction::getID $txid");
@@ -44,12 +40,12 @@ class Transaction extends MyBlockChainRecord
         if ((!self::$transactions[$txid]['time'] || self::$transactions[$txid]['time'] == "0000-00-00 00:00:00" || self::$transactions[$txid]['time'] == "1970-01-01 00:00:00") && self::$transactions[$txid]['lastScanned'] < $timestarted - 10)
         {
           echo "No time and not checked in the past 10 seconds, forcing update\n";
-          MyBlockChain::log("No time and not checked in the past 10 seconds, trying to update");
+          BlockChain::log("No time and not checked in the past 10 seconds, trying to update");
           $forceUpdate = true;
         }
       } else {
         $idsql = 'select transaction_id, time from transactions where txid = "'.$txid.'"';
-        $trow = MyBlockChain::$db->gethash($idsql);
+        $trow = BlockChain::$db->gethash($idsql);
         if ($trow && $trow['transaction_id'] > 0)
         {
           $transaction_id = $trow['transaction_id'];
@@ -60,11 +56,11 @@ class Transaction extends MyBlockChainRecord
           if (!$transaction_dbtime || $transaction_dbtime == "0000-00-00 00:00:00" || $transaction_dbtime == "1970-01-01 00:00:00")
           {
             echo "forcing update for $txid";
-            MyBlockChain::log("Forcing update for $txid");
+            BlockChain::log("Forcing update for $txid");
             $forceUpdate = true;
           }
         } else {
-          MyBlockChain::log("transaction not found");
+          BlockChain::log("transaction not found");
           $transaction_id = false;
         }
       }
@@ -86,7 +82,7 @@ class Transaction extends MyBlockChainRecord
 
         $insertTransactionSQL = 'insert into transactions (account, address, category, amount, confirmations, blockhash, blockindex, blocktime, txid, time, timereceived, inwallet) values ("'.$info['account'].'","'.$info['address'].'","'.$info['category'].'","'.$info['amount'].'","'.$info['confirmations'].'","'.$info['blockhash'].'","'.$info['blockindex'].'","'.date("Y-m-d H:i:s",$info['blocktime']).'","'.$info['txid'].'","'.date("Y-m-d H:i:s",$info['time']).'","'.date("Y-m-d H:i:s",$info['timereceived']).'", '.intval($info['inwallet']).')';
         //echo $insertTransactionSQL."\n\n";
-        $transaction_id = MyBlockChain::$db->doinsert($insertTransactionSQL);
+        $transaction_id = BlockChain::$db->insert($insertTransactionSQL);
 
         if (count($info['vin']))
           self::vInScan($transaction_id, $info['vin'], $distanceAway);
@@ -138,14 +134,14 @@ class Transaction extends MyBlockChainRecord
           {
             $updateFields = rtrim($updateFields,',');
             $usql = "update transactions set $updateFields where transaction_id = $transaction_id";
-            MyBlockChain::$db->doupdate($usql);
+            BlockChain::$db->update($usql);
             echo $usql;
             $broadcast = true;
           }
 
           self::$transactions[$txid]['info'] = $info;
 
-          MyBlockChain::log($usql);
+          BlockChain::log($usql);
 
         }
 
@@ -175,12 +171,12 @@ class Transaction extends MyBlockChainRecord
   {
     $addresses = array();
     $isql = "select addresses.address as address, transactions_vouts.value as amount, transactions.confirmations as confirmations, transactions.txid as txid, transactions.time as txtime from transactions inner join transactions_vouts on transactions.transaction_id = transactions_vouts.transaction_id inner join transactions_vouts_addresses on transactions_vouts.vout_id = transactions_vouts_addresses.vout_id inner join addresses on transactions_vouts_addresses.address_id = addresses.address_id where transactions_vouts.transaction_id = $transaction_id";
-    $ilist = MyBlockChain::$db->getlist($isql);
+    $ilist = BlockChain::$db->column($isql);
     if (count($ilist) > 0)
       $addresses = $ilist;
 
     $isql = "select addresses.address as address from transactions_vins inner join transactions_vouts on transactions_vins.vout_id = transactions_vouts.vout_id inner join transactions_vouts_addresses on transactions_vouts.address_id = addresses.address_id where transactions_vouts.transaction_id = $transaction_id";
-    $ilist = MyBlockChain::$db->getlist($isql);
+    $ilist = BlockChain::$db->column($isql);
     if (count($ilist) > 0)
       $addresses = $ilist;
 
@@ -192,16 +188,16 @@ class Transaction extends MyBlockChainRecord
     self::log("Address::getLedger $address $since");
     $ledgerSQL = "select addresses.address as address, addresses_ledger.ledger_id as ledger_id, addresses_ledger.amount as amount, transactions.txid as txid, transactions.time as txtime, transactions.confirmations as confirmations from addresses inner join addresses_ledger on addresses.address_id = addresses_ledger.address_id inner join transactions on addresses_ledger.transaction_id = transactions.transaction_id where transactions.transaction_id = $transaction_id";
 
-    $entries = MyBlockChain::$db->gethashrows($ledgerSQL);
+    $entries = BlockChain::$db->assocs($ledgerSQL);
     foreach ($entries as $entry)
     {
 
       echo "Checking for clients in the ".$entry['address']." channel\n";
       $csql = "select count(*) from websockets_clients_channels inner join websockets_channels on websockets_clients_channels.socket_channel_id = websockets_channels.socket_channel_id where websockets_channels.name = '".$entry['address']."'";
-      if (MyBlockChain::$db->getval($csql) > 0)
+      if (BlockChain::$db->value($csql) > 0)
       {
         echo "found, broadcasting update\n";
-        //MyBlockChain::broadcast(json_encode($entry), $entry['address']);
+        //BlockChain::broadcast(json_encode($entry), $entry['address']);
       }
     }
   }
@@ -209,7 +205,7 @@ class Transaction extends MyBlockChainRecord
   public static function getInfo($txid, $ismine = false)
   {
     self::log("Transaction::getInfo $txid");
-    $info = MyBlockChain::$bitcoin->gettransaction($txid);
+    $info = BlockChain::$bitcoin->gettransaction($txid);
     return $info;
   }
 
@@ -220,7 +216,7 @@ class Transaction extends MyBlockChainRecord
     {
       return self::$transactions[$txid]['info'];
     } else {
-      return MyBlockChain::$bitcoin->getrawtransaction($txid, 1);
+      return BlockChain::$bitcoin->getrawtransaction($txid, 1);
     }
   }
 
@@ -238,10 +234,10 @@ class Transaction extends MyBlockChainRecord
       $amount = floatval($detail['amount']);
       $fee = floatval($detail['fee']);
 
-      $detail_id = MyBlockChain::$db->getval("select detail_id from transactions_details where transaction_id = $transaction_id and address_id = $address_id and amount = $amount");
+      $detail_id = BlockChain::$db->value("select detail_id from transactions_details where transaction_id = $transaction_id and address_id = $address_id and amount = $amount");
       if (!$detail_id)
       {
-        $detail_id = MyBlockChain::$db->doinsert("insert into transactions_details (transaction_id, account_id, address_id, amount, fee) values ($transaction_id, $account_id, $address_id, $amount, $fee)");
+        $detail_id = BlockChain::$db->insert("insert into transactions_details (transaction_id, account_id, address_id, amount, fee) values ($transaction_id, $account_id, $address_id, $amount, $fee)");
       }
     }
   }
@@ -249,7 +245,7 @@ class Transaction extends MyBlockChainRecord
   public function vOutScan($transaction_id, $vouts)
   {
     self::log("Transaction::vOutScan $transaction_id ".json_encode($vouts));
-    $voutCount = MyBlockChain::$db->getval("select count(*) from transactions_vouts where transaction_id = $transaction_id");
+    $voutCount = BlockChain::$db->value("select count(*) from transactions_vouts where transaction_id = $transaction_id");
     $voutFound = count($vouts);
     if ($voutFound > $voutCount)
     {
@@ -263,7 +259,7 @@ class Transaction extends MyBlockChainRecord
   public function vInScan($transaction_id, $vins, $distanceAway = 0)
   {
     self::log("Transaction::vInScan $transaction_id ".json_encode($vins));
-    $vinCount = MyBlockChain::$db->getval("select count(*) from transactions_vins where transaction_id = $transaction_id");
+    $vinCount = BlockChain::$db->value("select count(*) from transactions_vins where transaction_id = $transaction_id");
     $vinFound = count($vins);
     if ($vinFound > $vinCount)
     {
@@ -275,7 +271,7 @@ class Transaction extends MyBlockChainRecord
   }
 }
 
-class TransactionVout extends MyBlockChainRecord {
+class TransactionVout extends BlockChainRecord {
 
   var $vout_id;
   var $transaction_id;
@@ -304,21 +300,21 @@ class TransactionVout extends MyBlockChainRecord {
       $vout_id = self::$vouts["$voutsID"]['vout_id'];
     } else {
       $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = $transaction_id and n = ".$vout['n'];
-      $vout_id = MyBlockChain::$db->getval($voutIDSQL);
+      $vout_id = BlockChain::$db->value($voutIDSQL);
       if (!$vout_id)
       {
         $vosql = "insert into transactions_vouts (transaction_id, txid, value, n, asm, hex, reqSigs, type) values (".$transaction_id.",'".$tx['txid']."','".$vout['value']."','".$vout['n']."','".$vout["scriptPubKey"]['asm']."','".$vout["scriptPubKey"]['hex']."','".$vout["scriptPubKey"]['reqSigs']."','".$vout["scriptPubKey"]['type']."')";
         //echo  "\n\n$vosql\n\n";
-        $vout_id = MyBlockChain::$db->doinsert($vosql);
+        $vout_id = BlockChain::$db->insert($vosql);
 
         foreach ($vout["scriptPubKey"]['addresses'] as $address)
         {
           $address_id = Address::getID($address);
           $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values ($vout_id, $address_id)";
-          MyBlockChain::$db->doinsert($aisql);
+          BlockChain::$db->insert($aisql);
           $aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values ($transaction_id, $vout_id, $address_id, (".$vout['value']."))";
-          MyBlockChain::$db->doinsert($aisql);
-          MyBlockChainRecord::$addressUpdates[] = $address;
+          BlockChain::$db->insert($aisql);
+          BlockChainRecord::$addressUpdates[] = $address;
         }
       }
     }
@@ -335,7 +331,7 @@ class TransactionVout extends MyBlockChainRecord {
 }
 
 
-class TransactionVin extends MyBlockChainRecord {
+class TransactionVin extends BlockChainRecord {
 
 
   public static $vins;
@@ -352,29 +348,29 @@ class TransactionVin extends MyBlockChainRecord {
       {
         $vin_id = $vins[$vinsID]['vin_id'];
       } else {
-        $vin_id = MyBlockChain::$db->getval("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and vout = ".$vin['vout']);
+        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and vout = ".$vin['vout']);
         if (!$vin_id)
         {
           if ($followtx)
           {
             $vinvout_transaction_id = Transaction::getID($vin['txid'], false, $distanceAway += 1);
-            $vin_vout_id = MyBlockChain::$db->getval("select vout_id from transactions_vouts where transaction_id = $vinvout_transaction_id and n = ".$vin['vout']);
+            $vin_vout_id = BlockChain::$db->value("select vout_id from transactions_vouts where transaction_id = $vinvout_transaction_id and n = ".$vin['vout']);
           } else {
             $vin_vout_id = null;
           }
 
           $visql = "insert into transactions_vins (transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id)  values ('".$transaction_id."','".$vin['txid']."','".$vin['vout']."','".$vin['scriptSig']['asm']."','".$vin['scriptSig']['hex']."','".$vin['sequence']."','".$vin['coinbase']."', '$vin_vout_id')";
-          $vin_id = MyBlockChain::$db->doinsert($visql);
+          $vin_id = BlockChain::$db->insert($visql);
 
           if ($vin_vout_id)
           {
-            $vinvoutaddresses = MyBlockChain::$db->gethashrows("select transactions_vouts_addresses.address_id as address_id, transactions_vouts.value as amount from transactions_vouts_addresses inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id where transactions_vouts_addresses.vout_id = $vin_vout_id");
+            $vinvoutaddresses = BlockChain::$db->assocs("select transactions_vouts_addresses.address_id as address_id, transactions_vouts.value as amount from transactions_vouts_addresses inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id where transactions_vouts_addresses.vout_id = $vin_vout_id");
             if (count($vinvoutaddresses) > 0)
             {
               foreach ($vinvoutaddresses as $vinaddress)
               {
                   $aisql = "insert into addresses_ledger (transaction_id, vout_id, vin_id, address_id, amount) values ($transaction_id, $vin_vout_id, $vin_id, ".$vinaddress['address_id'].", ".$vinaddress['amount']." * -1)";
-                  MyBlockChain::$db->doinsert($aisql);
+                  BlockChain::$db->insert($aisql);
               }
             }
           }
@@ -386,12 +382,12 @@ class TransactionVin extends MyBlockChainRecord {
       {
         $vin_id = $vins[$vinsID]['vin_id'];
       } else {
-        $vin_id = MyBlockChain::$db->getval("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and sequence = '".$vin['sequence']."' and coinbase = '".$vin['coinbase']."'");
+        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = $transaction_id and txid = '".$vin['txid']."' and sequence = '".$vin['sequence']."' and coinbase = '".$vin['coinbase']."'");
 
         if (!$vin_id)
         {
           $visql = "insert into transactions_vins (transaction_id, sequence, coinbase, vout_id)  values ('".$transaction_id."','".$vin['sequence']."','".$vin['coinbase']."', 0)";
-          $vin_id = MyBlockChain::$db->doinsert($visql);
+          $vin_id = BlockChain::$db->insert($visql);
 
         }
       }

@@ -1,7 +1,10 @@
 <?php
-require_once "myblockchain.php";
 
-class Account extends MyBlockChainRecord
+namespace MariaBlockChain;
+
+require_once "BlockChain.php";
+
+class Account extends BlockChainObject
 {
   var $account;
 
@@ -15,10 +18,10 @@ class Account extends MyBlockChainRecord
   function getID($account)
   {
     self::log("Looking up account $account");
-    $account_id = MyBlockChain::$db->getval("select account_id from accounts where name = '$account'");
+    $account_id = BlockChain::$db->value("select account_id from accounts where name = '$account'");
     if (!$account_id)
     {
-        $account_id = MyBlockChain::$db->doinsert("insert into accounts (name) values ('$account')");
+        $account_id = BlockChain::$db->insert("insert into accounts (name) values ('$account')");
     }
     return $account_id;
   }

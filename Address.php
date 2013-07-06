@@ -1,7 +1,10 @@
 <?php
-require_once "myblockchain.php";
 
-class Address extends MyBlockChainRecord
+namespace MariaBlockChain;
+
+require_once "BlockChain.php";
+
+class Address extends BlockChainRecord
 {
 
   var $address_id;
@@ -25,7 +28,7 @@ class Address extends MyBlockChainRecord
 
   public function validate()
   {
-    $addrInfo = MyBlockChain::$bitcoin->validateaddress($address);
+    $addrInfo = BlockChain::$bitcoin->validateaddress($address);
     if ($addrInfo['isvalid'])
     {
       $this->address = $addrInfo['address'];
@@ -44,9 +47,9 @@ class Address extends MyBlockChainRecord
   {
     if (!empty($address) && !empty($label) && is_numeric($secret_id))
     {
-      $label = MyBlockChain::$db->conn->real_escape_string($label);
+      $label = BlockChain::$db->esc($label);
       $address_id = Address::getID($address);
-      return MyBlockChain::$db->doinsert("insert into addresses_labels (address_id, label, secret_id, private) values ($address_id, '$label', $secret_id, $private)");
+      return BlockChain::$db->insert("insert into addresses_labels (address_id, label, secret_id, private) values ($address_id, '$label', $secret_id, $private)");
     }
   }
 
@@ -56,37 +59,37 @@ class Address extends MyBlockChainRecord
     $link_address_id = Address::getID($link_address);
     if (is_numeric($address_id) && is_numeric($link_address_id) && is_numeric($secret_id))
     {
-      return MyBlockChain::$db->doinsert("insert into addresses_aliases (address_id, alias_address_id, secret_id) values ($address_id, $link_address_id, $secret_id)");
+      return BlockChain::$db->insert("insert into addresses_aliases (address_id, alias_address_id, secret_id) values ($address_id, $link_address_id, $secret_id)");
     }
   }
 
   public static  function getInfo($address)
   {
     self::log("Address::getInfo $address");
-    $addrInfo = MyBlockChain::$bitcoin->validateaddress($address);
+    $addrInfo = BlockChain::$bitcoin->validateaddress($address);
     return $addrInfo;
   }
 
   public static function getID($address)
   {
     self::log("Address::getID $address");
-    $address_id = MyBlockChain::$db->getval("select address_id from addresses where address = '$address'");
+    $address_id = BlockChain::$db->value("select address_id from addresses where address = '$address'");
 
     if (!$address_id)
     {
-      $info = MyBlockChain::$bitcoin->validateaddress($address);
+      $info = BlockChain::$bitcoin->validateaddress($address);
       if ($info['isvalid'])
       {
         if ($info['ismine'])
         {
-          $account = MyBlockChain::$bitcoin->getaccount($address);
+          $account = BlockChain::$bitcoin->getaccount($address);
           $account_id = Account::getID($account);
         } else {
           $account_id = 0;
         }
 
         //echo "account_id: $account_id\n";
-        $address_id = MyBlockChain::$db->doinsert("insert into addresses (account_id, address, pubkey, ismine, isscript, iscompressed) values ($account_id, '$address', '".$info['pubkey']."',".intval($info['ismine']).",".intval($info['isscript']).",".intval($info['iscompressed']).")");
+        $address_id = BlockChain::$db->insert("insert into addresses (account_id, address, pubkey, ismine, isscript, iscompressed) values ($account_id, '$address', '".$info['pubkey']."',".intval($info['ismine']).",".intval($info['isscript']).",".intval($info['iscompressed']).")");
       } else {
         echo "invalid address";
         die;
@@ -106,7 +109,7 @@ class Address extends MyBlockChainRecord
     $address_id = self::getID($address);
     $asql = "select transactions_details.transaction_id as transaction_id, transactions.txid as txid, transactions.time as txtime, transactions_details.amount as amount, transactions_details.fee as fee from transactions_details inner join transactions on transactions_details.transaction_id = transactions.transaction_id where transactions_details.address_id = $address_id order by transactions.time desc";
 
-    $entries = MyBlockChain::$db->gethashrows($asql);
+    $entries = BlockChain::$db->assocs($asql);
     foreach ($entries as $entry)
     {
       if ($entries['amount'] > 0) // find source
@@ -114,13 +117,13 @@ class Address extends MyBlockChainRecord
         $newLedger = $entry;
 
         $visql = "select transactions_vins.vin as vin, transactions_vins.vout as vout, transactions_vins.txid as txid from transactions_vins where transaction_id = ".$entry['transaction_id'];
-        $virow = MyBlockChain::$db->gethash($visql);
+        $virow = BlockChain::$db->gethash($visql);
 
         $vin_transaction_id = Transaction::getID($virow['txid']);
-        $vinvout = MyBlockChain::$db->gethash("select * from transactions_vouts where transaction_id = $vin_transaction_id and n = ".$virow['vout']);
+        $vinvout = BlockChain::$db->gethash("select * from transactions_vouts where transaction_id = $vin_transaction_id and n = ".$virow['vout']);
 
         $vinAddressSQL = "select addresses.address address from addresses inner join transactions_vouts_addresses on addresses.address_id = transactions_vouts_addresses.address_id where transactions_vouts_addresses.vout_id = ".$vinvout['vout_id'];
-        $vinaddress = MyBlockChain::$db->getlist($vinAddressSQL);
+        $vinaddress = BlockChain::$db->getlist($vinAddressSQL);
 
         if (count($vinaddress) == 1){
           $vinaddress = $vinaddress[0];
@@ -145,10 +148,10 @@ class Address extends MyBlockChainRecord
 
         $voutsql = "select transactions_vouts.vout_id as vout_id, transactions_vouts.n as n, transactions_vouts.txid as txid from transactions_vouts inner join transactions_vouts_addresses on transactions_vouts.vout_id = transactions_vouts_addresses.vout_id where transactions_vouts_addresses.address_id = $address_id and transactions_vouts.transaction_id = ".$entry['transaction_id'];
 
-        $voutrow = MyBlockChain::$db->gethash($voutsql);
+        $voutrow = BlockChain::$db->gethash($voutsql);
 
         $voutAddressSQL = "select addresses.address as address from addresses inner join transactions_vouts_addresses on addresses.address_id = transactions_vouts_addresses.address_id where transactions_vouts_addresses.vout_id = ".$voutrow['vout_id'];
-        $voutaddress = MyBlockChain::$db->getlist($voutAddressSQL);
+        $voutaddress = BlockChain::$db->getlist($voutAddressSQL);
 
         if (count($voutaddress) == 1){
           $voutaddress = $voutaddress[0];
@@ -207,7 +210,7 @@ class Address extends MyBlockChainRecord
         voutAddress.address = '$address')
         order by txtime asc";
 
-    return MyBlockChain::$db->gethashrows($ledgerSQL);
+    return BlockChain::$db->assocs($ledgerSQL);
 
   }
 
@@ -218,7 +221,7 @@ class Address extends MyBlockChainRecord
   {
     self::log("Address::getLedger $address $since");
     $ledgerSQL = "select addresses_ledger.ledger_id as ledger_id, addresses_ledger.amount as amount, transactions.txid as txid, transactions.time as txtime, transactions.confirmations as confirmations from addresses inner join addresses_ledger on addresses.address_id = addresses_ledger.address_id inner join transactions on addresses_ledger.transaction_id = transactions.transaction_id where addresses.address = '$address'";
-    return MyBlockChain::$db->gethashrows($ledgerSQL);
+    return BlockChain::$db->assocs($ledgerSQL);
   }
 
 
@@ -240,9 +243,9 @@ class Address extends MyBlockChainRecord
       left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
       left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
       left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
-      where targetAddresses.address = \"".MyBlockChain::$db->clean($address)."\"";
-      //echo json_encode(MyBlockChain::$db->gethashrows($sentSQL));
-      return MyBlockChain::$db->gethashrows($sentSQL);
+      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\"";
+      //echo json_encode(BlockChain::$db->assocs($sentSQL));
+      return BlockChain::$db->assocs($sentSQL);
   }
 
   public static function getReceived($address)
@@ -265,12 +268,12 @@ class Address extends MyBlockChainRecord
       left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id
       left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id
       left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
-      where targetAddresses.address = \"".MyBlockChain::$db->clean($address)."\" and targetAddresses.address_id != sendingAddresses.address_id";
-     // echo json_encode(MyBlockChain::$db->gethashrows($receivedSQL));
+      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id";
+     // echo json_encode(BlockChain::$db->assocs($receivedSQL));
 
       //echo $receivedSQL;
 
-      return MyBlockChain::$db->gethashrows($receivedSQL);
+      return BlockChain::$db->assocs($receivedSQL);
   }
 
 }

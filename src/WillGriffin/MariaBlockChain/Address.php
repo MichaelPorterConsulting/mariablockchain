@@ -4,7 +4,7 @@ namespace WillGriffin\MariaBlockChain;
 
 require_once "BlockChain.php";
 
-class Address extends BlockChainRecord
+class Address extends BasicObject
 {
 
   var $address_id;

@@ -1,6 +1,7 @@
 {
     "name": "willgriffin/mariablockchain",
     "description": "MariaDB BlockChain PHP Classes",
+    "type": "library",
     "license": "BSD-2-Clause",
     "authors": [
         {
@@ -10,12 +11,12 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.4.0",
          "willgriffin/mariainterface": "dev-master"
     },
     "autoload": {
         "psr-0": {
-            "MariaBlockChain": "/"
+            "WillGriffin": "src/"
         }
     }
 }

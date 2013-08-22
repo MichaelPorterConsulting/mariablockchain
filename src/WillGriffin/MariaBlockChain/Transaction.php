@@ -70,7 +70,7 @@ class Transaction extends BlockChainObject
         }
       } else {
         $idsql = 'select transaction_id, time from transactions where txid = "'.$txid.'"';
-        $trow = BlockChain::$db->gethash($idsql);
+        $trow = BlockChain::$db->assoc($idsql);
         if ($trow && $trow['transaction_id'] > 0)
         {
           $transaction_id = $trow['transaction_id'];

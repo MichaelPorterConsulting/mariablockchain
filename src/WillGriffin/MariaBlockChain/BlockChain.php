@@ -80,7 +80,7 @@ class BlockChain extends BasicObject
     $filtersql = rtrim($filtersql, ',');
 
     $sql = 'select $pkfld from $table $filtersql';
-    $id = BlockChain::$db->getval($sql);
+    $id = BlockChain::$db->value($sql);
     if (!$id && $doInsert)
     {
       foreach ($filters as $filter => $fval)
@@ -142,7 +142,7 @@ class BlockChain extends BasicObject
 
     if (empty(self::$lastScannedBlock))
     {
-      $lastScannedBlock = BlockChain::$db->getval("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
+      $lastScannedBlock = BlockChain::$db->value("select blockhash from transactions where blockhash is not null and time != '0000-00-00 00:00:00' order by time desc limit 0, 1");
       if (!$lastScannedBlock)
       {
         $lastScannedBlock = "";

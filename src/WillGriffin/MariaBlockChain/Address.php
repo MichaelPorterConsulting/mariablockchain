@@ -102,27 +102,42 @@ class Address extends BasicObject
     self::log("Address::getID $address");
     $address_id = BlockChain::$db->value("select address_id from addresses where address = '$address'");
 
+    self::log("found address_id $address_id");
+
     if (!$address_id)
     {
+      self::log("no love, creating");
       $info = BlockChain::$bitcoin->validateaddress($address);
-      if ($info['isvalid'])
+      self::log("derr ".$info->isvalid);
+      if ($info->isvalid)
       {
-        if ($info['ismine'])
+        self::log("she's valid");
+
+        if ($info->ismine)
         {
           $account = BlockChain::$bitcoin->getaccount($address);
+          self:log("getting account id");
           $account_id = Account::getID($account);
         } else {
           $account_id = 0;
         }
 
+        self::log("this far");
+
         //echo "account_id: $account_id\n";
-        $address_id = BlockChain::$db->insert("insert into addresses (account_id, address, pubkey, ismine, isscript, iscompressed) values ($account_id, '$address', '".$info['pubkey']."',".intval($info['ismine']).",".intval($info['isscript']).",".intval($info['iscompressed']).")");
+        $address_id = BlockChain::$db->insert("insert into addresses (account_id, address, pubkey, ismine, isscript, iscompressed) values ($account_id, '$address', '".$info->pubkey."',".intval($info->ismine).",".intval($info->isscript).",".intval($info->iscompressed).")");
+
+        self::log("farther");
+
+
       } else {
+        self::log("invalid address");
         echo "invalid address";
         die;
       }
 
     }
+    self::log("address_id $address_id");
 
     return $address_id;
   }
@@ -257,6 +272,10 @@ class Address extends BasicObject
       where targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id";
       return BlockChain::$db->assocs($receivedSQL);
   }
+
+
+
+
 
 }
 

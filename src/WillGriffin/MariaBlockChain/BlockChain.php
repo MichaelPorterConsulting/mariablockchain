@@ -92,7 +92,7 @@ class BlockChain extends BasicObject
       $ivals = rtrim($ivals,',');
 
       $isql = "insert into $table ($iflds) values ($ivals)";
-      $id = BlockChain::$db->doinsert($isql);
+      $id = BlockChain::$db->insert($isql);
     }
     return $id;
   }*/

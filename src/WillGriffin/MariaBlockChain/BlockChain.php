@@ -117,7 +117,7 @@ class BlockChain extends BasicObject
 
   public static function scan()
   {
-
+    self::log("BlockChain::scan");
     $timenow = time();
     //todo: memcache
     if (count(Transaction::$transactions) > 0)
@@ -153,16 +153,19 @@ class BlockChain extends BasicObject
 
     $newtxs = BlockChain::$bitcoin->listsinceblock(self::$lastScannedBlock);
 
-    if (count($newtxs['transactions']) > 0 && ($newtxs['lastblock'] != self::$lastScannedBlock || count($newtxs['transactions']) > self::$lastScannedCount))
+    
+
+
+    if (count($newtxs->transactions) > 0 && ($newtxs->lastblock != self::$lastScannedBlock || count($newtxs->transactions) > self::$lastScannedCount))
     {
       BlockChain::log(self::$lastScannedCount - count($newtxs)." new transactions found\n");
-      foreach ($newtxs['transactions'] as $newtx)
+      foreach ($newtxs->transactions as $newtx)
       {
-        $transaction_id = Transaction::getID($newtx['txid'], true, 0);
+        $transaction_id = Transaction::getID($newtx->txid, true, 0);
       }
     }
-    self::$lastScannedBlock = $newtxs['lastblock'];
-    self::$lastScannedCount = count($newtxs['transactions']);
+    self::$lastScannedBlock = $newtxs->lastblock;
+    self::$lastScannedCount = count($newtxs->transactions);
     self::broadcastUpdates();
   }
 

@@ -30,7 +30,7 @@ class Account extends BlockChainObject
   * ?>
   * </code>
    */
-  function getID($account)
+  public static function getID($account)
   {
     self::log("Looking up account $account");
     $account_id = BlockChain::$db->value("select account_id from accounts where name = '$account'");

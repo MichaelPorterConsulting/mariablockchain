@@ -116,7 +116,7 @@ class Address extends BasicObject
         if ($info->ismine)
         {
           $account = BlockChain::$bitcoin->getaccount($address);
-          self:log("getting account id");
+          self::log("getting account id");
           $account_id = Account::getID($account);
         } else {
           $account_id = 0;
@@ -194,6 +194,82 @@ class Address extends BasicObject
     return BlockChain::$db->assocs($ledgerSQL);
   }
 
+
+  /**
+  *
+  * sql to retrieve list of address credits (sent coins)
+  *
+  *
+  * @param string address related address to fetch sent ledger sql for
+  *
+  * <code>
+  * <?php
+  *
+  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  *
+  * ?>
+  * </code>
+   */
+
+  public static function getSentSQL($address, $secret_id = null)
+  {
+    //todo: optimize joins / inputs once testing is easier.. seems to work for now
+    //todo: add params
+
+
+    /*return "select
+      \"sent\" as type,
+      receivingAddresses.address as address,
+      (select label from addresses_labels where addresses_labels.address_id = receivingAddresses.address_id) as label,
+      receivingVouts.value as value,
+      (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
+      (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
+      (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
+      receivingVouts.vout_id as vout_id
+      from addresses as targetAddresses
+      left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
+      left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
+      left join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id
+      left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
+      left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
+      left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
+      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\""; */
+
+      return "select
+        \"sent\" as type,
+        receivingAddresses.address as toAddress,  
+        targetAddresses.address as fromAddress,
+        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,  
+        (select label from addresses_labels where addresses_labels.address_id = receivingAddresses.address_id) as fromLabel,
+        receivingVouts.value as value,
+        (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
+        (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
+        (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
+        receivingVouts.vout_id as vout_id
+      from addresses as targetAddresses
+        left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
+        left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
+        left join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id
+        left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
+        left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
+        left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
+      where (targetAddresses.address = \"".BlockChain::$db->esc($address)."\") or 
+
+        targetAddresses.address_id in (
+          select alias_address_id 
+          from addresses_aliases 
+          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id 
+          where 
+            aliasAddresses.address = \"".BlockChain::$db->esc($address)."\") 
+      and receivingVouts.value is not null";
+
+
+
+
+
+  }
+
+
   /**
   *
   * list of address credits (sent coins)
@@ -210,26 +286,81 @@ class Address extends BasicObject
   * </code>
    */
 
-  public static function getSent($address)
+  public static function getSent($address, $secret_id = null)
   {
-    //todo: optimize joins / inputs once testing is easier.. seems to work for now
-    $sentSQL = "select
-      receivingAddresses.address as address,
-      receivingVouts.value as value,
+      //echo json_encode(BlockChain::$db->assocs($sentSQL));
+      return BlockChain::$db->assocs(self::getSentSQL($address));
+  }
+
+
+  /**
+  *
+  * sql to retrieve list of address debits (received coins)
+  *
+  *
+  * @param string address related address to fetch received ledger sql for
+  *
+  * <code>
+  * <?php
+  *
+  * $receivedSQL = Address::getReceivedSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
+  *
+  * ?>
+  * </code>
+   */
+
+  public static function getReceivedSQL($address, $secret_id = null)
+  {
+    //self::getInputs($address);
+    //todo: optimize joins / inputs... experiment with 'change' more
+    //todo: time in db relates to when the database record was added, fiddle with other options
+    //todo: consider adding support for aliases
+    /*return "select
+      \"received\" as type,
+      sendingAddresses.address as address,
+      (select label from addresses_labels where addresses_labels.address_id = sendingAddresses.address_id) as label,
+      transactions_vouts.value as value,
       (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
       (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
       (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
-      receivingVouts.vout_id as vout_id
+      transactions_vouts.vout_id as vout_id
       from addresses as targetAddresses
       left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
       left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
-      left join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id
-      left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
-      left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
-      left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
-      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\"";
-      //echo json_encode(BlockChain::$db->assocs($sentSQL));
-      return BlockChain::$db->assocs($sentSQL);
+      left outer join transactions_vins on transactions_vins.transaction_id = transactions_vouts.transaction_id
+      left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id
+      left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id
+      left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
+      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id"; */
+
+      return "select
+        \"received\" as type,
+        targetAddresses.address as toAddress,
+        sendingAddresses.address as fromAddress,
+        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,  
+        (select label from addresses_labels where addresses_labels.address_id = sendingAddresses.address_id) as fromLabel,
+        transactions_vouts.value as value,
+        (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
+        (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
+        (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
+        transactions_vouts.vout_id as vout_id
+      from addresses as targetAddresses
+        left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
+        left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
+        left outer join transactions_vins on transactions_vins.transaction_id = transactions_vouts.transaction_id
+        left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id
+        left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id
+        left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
+      where (targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id) or
+        targetAddresses.address_id in (
+          select alias_address_id 
+          from addresses_aliases 
+          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id 
+          where 
+            aliasAddresses.address = \"".BlockChain::$db->esc($address)."\" and aliasAddresses.address_id != sendingAddresses.address_id)
+      and transactions_vouts.value is not null";
+
+
   }
 
 
@@ -249,34 +380,37 @@ class Address extends BasicObject
   * </code>
    */
 
-  public static function getReceived($address)
-  {
-    //self::getInputs($address);
-    //todo: optimize joins / inputs... experiment with 'change' more
-    //todo: time in db relates to when the database record was added, fiddle with other options
-    //todo: consider adding support for aliases
-    $receivedSQL = "select
-      sendingAddresses.address as address,
-      transactions_vouts.value as value,
-      (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
-      (select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid,
-      (select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations,
-      transactions_vouts.vout_id as vout_id
-      from addresses as targetAddresses
-      left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id
-      left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id
-      left outer join transactions_vins on transactions_vins.transaction_id = transactions_vouts.transaction_id
-      left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id
-      left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id
-      left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
-      where targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id";
-      return BlockChain::$db->assocs($receivedSQL);
+  public static function getReceived($address, $secret_id = null)
+  {    
+    return BlockChain::$db->assocs(self::getReceivedSQL($address));
   }
 
 
+  /**
+  *
+  * list of address debits (received coins)
+  *
+  *
+  * @param string address related address to fetch the ledger for
+  *
+  * <code>
+  * <?php
+  *
+  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
+  *
+  * ?>
+  * </code>
+   */
 
+  public static function getLedger($address, $secret_id = null)
+  {
 
-
+    self::log("getting ledger $address $secret_id");
+    $ledgerSQL = self::getReceivedSQL($address, $secret_id)." union ".self::getSentSQL($address, $secret_id);
+    self::log($ledgerSQL);
+    //echo $ledgerSQL;
+    return BlockChain::$db->assocs($ledgerSQL);
+  }
 }
 
 

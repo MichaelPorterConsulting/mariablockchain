@@ -37,7 +37,7 @@ class Transaction extends BlockChainObject
   * @param boolean forceScan
   * @param integer distanceAway also scan in transactions this many degrees away
   * @param string forceUpdate
-
+  *
   *
   * <code>
   * <?php
@@ -94,33 +94,33 @@ class Transaction extends BlockChainObject
       {
         $info = array();
 
-        $info = array_merge($info, self::getRawInfo($txid));
+        $info = (object)array_merge((array)$info, (array)self::getRawInfo($txid));
 
-        if ($info['confirmations'] == 0)
+        if ($info->confirmations == 0)
         {
           $walletinfo = self::getInfo($txid);
-          $info['time'] = $walletinfo['time'];
+          $info->time = $walletInfo->time;
         }
 
         //var_dump($info);
          //Transaction::log("Inserting transaction $txid");
 
-        $insertTransactionSQL = 'insert into transactions (account, address, category, amount, confirmations, blockhash, blockindex, blocktime, txid, time, timereceived, inwallet) values ("'.$info['account'].'","'.$info['address'].'","'.$info['category'].'","'.$info['amount'].'","'.$info['confirmations'].'","'.$info['blockhash'].'","'.$info['blockindex'].'","'.date("Y-m-d H:i:s",$info['blocktime']).'","'.$info['txid'].'","'.date("Y-m-d H:i:s",$info['time']).'","'.date("Y-m-d H:i:s",$info['timereceived']).'", '.intval($info['inwallet']).')';
+        $insertTransactionSQL = 'insert into transactions (account, address, category, amount, confirmations, blockhash, blockindex, blocktime, txid, time, timereceived, inwallet) values ("'.$info->account.'","'.$info->address.'","'.$info->category.'","'.$info->amount.'","'.$info->confirmations.'","'.$info->blockhash.'","'.$info->blockindex.'","'.date("Y-m-d H:i:s",$info->blocktime).'","'.$info->txid.'","'.date("Y-m-d H:i:s",$info->time).'","'.date("Y-m-d H:i:s",$info->timereceived).'", '.intval($info->inwallet).')';
         //echo $insertTransactionSQL."\n\n";
         $transaction_id = BlockChain::$db->insert($insertTransactionSQL);
 
-        if (count($info['vin']))
-          self::vInScan($transaction_id, $info['vin'], $distanceAway);
+        if (count($info->vin))
+          self::vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $distanceAway);
 
-        if (count($info['vout']))
-          self::vOutScan($transaction_id, $info['vout']);
+        if (count($info->vout))
+          self::vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
 
-        if ($info['inwallet'])
+        if ($info->inwallet)
           self::detailsScan($txid);
 
         self::$transactions[$txid] = array(
           "transaction_id" => $transaction_id,
-          "time" => $info['time'],
+          "time" => $info->time,
           "txid" => $txid,
           "ismine" => $ismine,
           "info" => $info
@@ -136,23 +136,23 @@ class Transaction extends BlockChainObject
           if ($ismine)
             $info = self::getInfo($txid);
 
-          $info = array_merge($info, self::getRawInfo($txid, true));
+          $info = (object)array_merge((array)$info, (array)self::getRawInfo($txid, true));
 
           $infoFields = array('account','address','category','amount','confirmations','blockhash','blockindex','blocktime','timereceived','inwallet');
           foreach ($infoFields as $fld)
           {
-            if (!empty($info[$fld]) && $info[$fld] != self::$transactions[$txid][$fld])
+            if (!empty($info->{$fld}) && $info->{$fld} != self::$transactions[$txid][$fld])
             {
-              $updateFields .= "$fld = '{$info[$fld]}',";
-              self::$transactions[$txid][$fld] = $info[$fld];
+              $updateFields .= "$fld = '{$info->{$fld}}',";
+              self::$transactions[$txid][$fld] = $info->{$fld};
             }
           }
 
-          if ($info['time'] && $info['time'] != self::$transactions[$txid]['info']['time'])
+          if ($info->time && $info->time != self::$transactions[$txid]['info']->time)
           {
-            echo $info['time'].",".self::$transactions[$txid]['info']['time']."\n";
-            self::$transactions[$txid]['time'] = date("Y-m-d H:i:s", $info['time']);
-            $updateFields .= "time = '".date("Y-m-d H:i:s", $info['time'])."',";
+            echo $info->time.",".self::$transactions[$txid]['info']->time."\n";
+            self::$transactions[$txid]['time'] = date("Y-m-d H:i:s", $info->time);
+            $updateFields .= "time = '".date("Y-m-d H:i:s", $info->time)."',";
           }
 
           if (!empty($updateFields))
@@ -172,11 +172,11 @@ class Transaction extends BlockChainObject
 
         if ($forceScan)
         {
-          if (count($info['vin']))
-            self::vInScan($transaction_id, $info['vin'], $distanceAway);
+          if (count($info->vin))
+            self::vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $distanceAway);
 
-          if (count($info['vout']))
-            self::vOutScan($transaction_id, $info['vout']);
+          if (count($info->vout))
+            self::vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
         }
       }
       self::$transactions[$txid]['lastScanned'] = time();
@@ -303,9 +303,9 @@ class Transaction extends BlockChainObject
   public static function detailsScan($txid)
   {
     self::log("Transaction::detailsScan $txid");
-    $info = self::getInfo($txid);
+    $info = self::getInfo($txid); //todo: i bet this is going to break 
     $transaction_id = self::getID($txid);
-    foreach ($info['details'] as $detail)
+    foreach ($info->details as $detail)
     {
       $account_id = Account::getID($detail['account']);
       $address_id = Address::getID($detail['address']);
@@ -337,16 +337,16 @@ class Transaction extends BlockChainObject
   * </code>
    */
   //todo: make second argument optional, if not set get vouts from bitcoind jsonrpc
-  public function vOutScan($transaction_id, $vouts)
+  public static function vOutScan($tx, $vouts)
   {
-    self::log("Transaction::vOutScan $transaction_id ".json_encode($vouts));
-    $voutCount = BlockChain::$db->value("select count(*) from transactions_vouts where transaction_id = $transaction_id");
+    self::log("Transaction::vOutScan {$tx->transaction_id} ".json_encode($vouts));
+    $voutCount = BlockChain::$db->value("select count(*) from transactions_vouts where transaction_id = {$tx->transaction_id}");
     $voutFound = count($vouts);
     if ($voutFound > $voutCount)
     {
       foreach ($vouts as $vout)
       {
-        $vout_id = TransactionVout::getID($transaction_id, $vout);
+        $vout_id = TransactionOutput::getID($tx, $vout);
       }
     }
   }
@@ -369,16 +369,16 @@ class Transaction extends BlockChainObject
   * </code>
    */
   //todo: make second argument optional, if not set get vins from bitcoind jsonrpc
-  public function vInScan($transaction_id, $vins, $distanceAway = 0)
+  public static function vInScan($tx, $vins, $distanceAway = 0)
   {
-    self::log("Transaction::vInScan $transaction_id ".json_encode($vins));
-    $vinCount = BlockChain::$db->value("select count(*) from transactions_vins where transaction_id = $transaction_id");
+    self::log("Transaction::vInScan {$tx->transaction_id} ".json_encode($vins));
+    $vinCount = BlockChain::$db->value("select count(*) from transactions_vins where transaction_id = {$tx->transaction_id}");
     $vinFound = count($vins);
     if ($vinFound > $vinCount)
     {
       foreach ($vins as $vin)
       {
-        $vin_id = TransactionVin::getID($transaction_id, $vin, $distanceAway++, ($distanceAway <= self::$maxScanDistance));
+        $vin_id = TransactionInput::getID($tx, $vin, $distanceAway++, ($distanceAway <= self::$maxScanDistance));
       }
     }
   }

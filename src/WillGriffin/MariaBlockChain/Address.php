@@ -7,7 +7,7 @@ require_once "BlockChain.php";
 class Address extends BasicObject
 {
 
-  var $address_id;
+  //var $address_id;
   var $address;
   var $isvalid;
   var $ismine;
@@ -43,6 +43,7 @@ class Address extends BasicObject
    */
   public function validate()
   {
+    Main::log("validating address {$this->address}");
     $addrInfo = BlockChain::$bitcoin->validateaddress($this->address);
     if ($addrInfo['isvalid'])
     {
@@ -108,7 +109,9 @@ class Address extends BasicObject
     {
       self::log("no love, creating");
       $info = BlockChain::$bitcoin->validateaddress($address);
-      self::log("derr ".$info->isvalid);
+
+      self::log(json_encode($info));
+      self::log("address $address ".$info->isvalid);
       if ($info->isvalid)
       {
         self::log("she's valid");
@@ -237,9 +240,9 @@ class Address extends BasicObject
 
       return "select
         \"sent\" as type,
-        receivingAddresses.address as toAddress,  
+        receivingAddresses.address as toAddress,
         targetAddresses.address as fromAddress,
-        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,  
+        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,
         (select label from addresses_labels where addresses_labels.address_id = receivingAddresses.address_id) as fromLabel,
         receivingVouts.value as value,
         (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
@@ -253,14 +256,14 @@ class Address extends BasicObject
         left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id
         left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id
         left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id
-      where (targetAddresses.address = \"".BlockChain::$db->esc($address)."\") or 
+      where (targetAddresses.address = \"".BlockChain::$db->esc($address)."\") or
 
         targetAddresses.address_id in (
-          select alias_address_id 
-          from addresses_aliases 
-          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id 
-          where 
-            aliasAddresses.address = \"".BlockChain::$db->esc($address)."\") 
+          select alias_address_id
+          from addresses_aliases
+          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id
+          where
+            aliasAddresses.address = \"".BlockChain::$db->esc($address)."\")
       and receivingVouts.value is not null";
 
 
@@ -268,6 +271,9 @@ class Address extends BasicObject
 
 
   }
+
+
+
 
 
   /**
@@ -337,7 +343,7 @@ class Address extends BasicObject
         \"received\" as type,
         targetAddresses.address as toAddress,
         sendingAddresses.address as fromAddress,
-        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,  
+        (select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,
         (select label from addresses_labels where addresses_labels.address_id = sendingAddresses.address_id) as fromLabel,
         transactions_vouts.value as value,
         (select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime,
@@ -353,10 +359,10 @@ class Address extends BasicObject
         left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id
       where (targetAddresses.address = \"".BlockChain::$db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id) or
         targetAddresses.address_id in (
-          select alias_address_id 
-          from addresses_aliases 
-          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id 
-          where 
+          select alias_address_id
+          from addresses_aliases
+          inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id
+          where
             aliasAddresses.address = \"".BlockChain::$db->esc($address)."\" and aliasAddresses.address_id != sendingAddresses.address_id)
       and transactions_vouts.value is not null";
 
@@ -381,7 +387,7 @@ class Address extends BasicObject
    */
 
   public static function getReceived($address, $secret_id = null)
-  {    
+  {
     return BlockChain::$db->assocs(self::getReceivedSQL($address));
   }
 

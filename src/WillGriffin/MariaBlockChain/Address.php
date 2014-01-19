@@ -18,7 +18,7 @@ class Address extends BasicObject
 
   public function __construct($address = false)
   {
-    parent::__construct();
+    //parent::__construct();
     if ($address)
     {
       $this->address = $address;
@@ -43,16 +43,16 @@ class Address extends BasicObject
    */
   public function validate()
   {
-    Main::log("validating address {$this->address}");
+    self::log("validating address {$this->address}");
     $addrInfo = BlockChain::$bitcoin->validateaddress($this->address);
-    if ($addrInfo['isvalid'])
+    if ($addrInfo->isvalid)
     {
-      $this->address = $addrInfo['address'];
-      $this->isvalid = $addrInfo['isvalid'];
-      $this->ismine = $addrInfo['ismine'];
-      $this->isscript = $addrInfo['isscript'];
-      $this->pubkey = $addrInfo['pubkey'];
-      $this->iscompressed = $addrInfo['iscompressed'];
+      $this->address = $addrInfo->address;
+      $this->isvalid = $addrInfo->isvalid;
+      $this->ismine = $addrInfo->ismine;
+      $this->isscript = $addrInfo->isscript;
+      $this->pubkey = $addrInfo->pubkey;
+      $this->iscompressed = $addrInfo->iscompressed;
       return true;
     } else {
       return false;

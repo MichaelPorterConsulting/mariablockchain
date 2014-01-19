@@ -153,7 +153,7 @@ class BlockChain extends BasicObject
 
     $newtxs = BlockChain::$bitcoin->listsinceblock(self::$lastScannedBlock);
 
-    
+
 
 
     if (count($newtxs->transactions) > 0 && ($newtxs->lastblock != self::$lastScannedBlock || count($newtxs->transactions) > self::$lastScannedCount))

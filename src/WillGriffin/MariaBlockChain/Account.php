@@ -33,10 +33,10 @@ class Account extends BlockChainObject
   public static function getID($account)
   {
     self::log("Looking up account $account");
-    $account_id = BlockChain::$db->value("select account_id from accounts where name = '$account'");
+    $account_id = BlockChain::$db->value("select account_id from wallet_accounts where name = '$account'");
     if (!$account_id)
     {
-        $account_id = BlockChain::$db->insert("insert into accounts (name) values ('$account')");
+        $account_id = BlockChain::$db->insert("insert into wallet_accounts (name) values ('$account')");
     }
     return $account_id;
   }

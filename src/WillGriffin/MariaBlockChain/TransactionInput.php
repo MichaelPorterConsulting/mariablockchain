@@ -4,87 +4,81 @@ namespace WillGriffin\MariaBlockChain;
 
 require_once "Transaction.php";
 
-class TransactionInput extends BlockChainObject {
+class TransactionInput  extends Object {
 
-  public static $vins;
+  protected $_vout;
 
-  /**
-  *
-  * get primary key id for transaction input. if not in the database inserts and grabs related tx
-  *
-  *
-  * @param integer $transaction_id parent transaction primary key
-  * @param array $vin associative array representing transaction input
-  * @param integer distanceAway current recursion level
-  * @param boolean $followtx whether to scan source transaction
-  *
-  * <code>
-  *
-  * $vout_id = TransactionOutput::getID(1, ...);
-  *
-  * </code>
-   */
-  public static function getID($tx, $vin, $distanceAway = 0, $followtx = true)
+  public $txid;
+  public $n;
+
+  public $scriptSig;
+  public $sequence;
+
+  public function __construct($blockchain, $args)
   {
+    $this->blockchain = $blockchain;
 
-    self::log("TransactionVin::getId $transaction_id".json_encode($vin));
-
-    if ($vin->txid && isset($vin->vout))
-    {
-      $vinsID = $vin->txid."-".$vin->vout;
-      if (isset(self::$vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0)
-      {
-        $vin_id = $vins[$vinsID]['vin_id'];
-      } else {
-        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = {$tx->transaction_id} and txid = '{$vin->txid}' and vout = {$vin->vout}");
-        if (!$vin_id)
-        {
-          if ($followtx)
-          {
-            $vinvout_transaction_id = Transaction::getID($vin->txid, false, $distanceAway += 1);
-            $vin_vout_id = BlockChain::$db->value("select vout_id from transactions_vouts where transaction_id = $vinvout_transaction_id and n = ".$vin->vout);
-          } else {
-            $vin_vout_id = null;
-          }
-
-          $visql = "insert into transactions_vins (transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id)  values ('".$tx->transaction_id."','".$vin->txid."','".$vin->vout."','".$vin->scriptSig->asm."','".$vin->scriptSig->hex."','".$vin->sequence."','".$vin->coinbase."', '$vin_vout_id')";
-          $vin_id = BlockChain::$db->insert($visql);
-
-          if ($vin_vout_id)
-          {
-            $vinvoutaddresses = BlockChain::$db->assocs("select transactions_vouts_addresses.address_id as address_id, transactions_vouts.value as amount from transactions_vouts_addresses inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id where transactions_vouts_addresses.vout_id = $vin_vout_id");
-            if (count($vinvoutaddresses) > 0)
-            {
-              foreach ($vinvoutaddresses as $vinaddress)
-              {
-                  $aisql = "insert into addresses_ledger (transaction_id, vout_id, vin_id, address_id, amount) values ({$tx->transaction_id}, $vin_vout_id, $vin_id, ".$vinaddress['address_id'].", ".$vinaddress['amount']." * -1)";
-                  BlockChain::$db->insert($aisql);
-              }
-            }
-          }
-        }
-      }
-    } else if ($vin->sequence > 0 && !empty($vin->coinbase)) { // Generation
-      $vinsID = $vin->txid."-".$vin->vout;
-      if (isset(self::$vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0)
-      {
-        $vin_id = $vins[$vinsID]['vin_id'];
-      } else {
-        $vin_id = BlockChain::$db->value("select vin_id from transactions_vins where transaction_id = {$tx->transaction_id} and txid = '".$vin->txid."' and sequence = '".$vin->sequence."' and coinbase = '".$vin->coinbase."'");
-
-        if (!$vin_id)
-        {
-          $visql = "insert into transactions_vins (transaction_id, sequence, coinbase, vout_id)  values ('".$tx->transaction_id."','".$vin->sequence."','".$vin->coinbase."', 0)";
-          $vin_id = BlockChain::$db->insert($visql);
-
-        }
-      }
+    if (is_array($args) || ($args instanceof \stdClass)) {
+      $this->_loadArray($args);
     } else {
-      self::log("can not compute input ".json_encode($vin));
+      echo "\nCouldn't load\n";
+      var_dump($args);
+      die;
+    }
+  }
+
+  public function __get($fld)
+  {
+    switch ($fld)
+    {
+      case 'vout':
+
+        if ( !($this->_vout instanceof TransactionOutput) ) {
+          echo "\nloading vout\n";
+          $this->_vout = $this->blockchain->transactions->getvout($this->txid, $this->n);
+        }
+
+        return $this->_vout;
+
+      break;
+
+      default:
+
+      break;
+    }
+  }
+
+  public function stdClass()
+  {
+    $arr = [
+      "txid" => $this->txid,
+      "n" => $this->n
+    ];
+
+    if ($this->_vout instanceof TransactionOutput) {
+      $arr['vout'] = $this->_vout->stdClass();
     }
 
-    self::$vins["{$tx->transaction_id}-{$vin->vout}"]["vin_id"] = $vin_id;
-    return $vin_id;
+    return (object) $arr;
+
+  }
+
+  private function _loadArray($arr)
+  {
+
+    if (false === $arr instanceof \stdClass) {
+      $arr = (object) $arr;
+    }
+
+    foreach (["scriptSig", "txid", "sequence"] as $fld) {
+      $this->{$fld} = $arr->{$fld};
+    }
+
+    if (is_numeric($arr->vout)) { //todo: consider not loading until triggered by __get
+      $this->_vout = $this->blockchain->transactions->getvout($arr->txid, $arr->vout);
+    } else if (is_array($arr->vout) || $arr->vout instanceof \stdClass) {
+      $this->_vout = new TransactionOutput($this->blockchain, $arr->vout);
+    }
   }
 }
 

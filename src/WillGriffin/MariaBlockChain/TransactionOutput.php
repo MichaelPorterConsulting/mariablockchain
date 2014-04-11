@@ -4,71 +4,70 @@ namespace WillGriffin\MariaBlockChain;
 
 require_once "Transaction.php";
 
-class TransactionOutput extends BlockChainObject {
+class TransactionOutput extends Object {
 
-  var $vout_id;
-  var $transaction_id;
-  var $value;
-  var $n;
-  var $asm;
-  var $hex;
-  var $reqSigs;
-  var $type;
-  var $txid;
+  public $vout_id;
+  public $transaction_id;
 
-  public static $vouts;
+  public $addresses;
 
-  public function __construct()
+  public $scriptPubKey;
+
+  public $value;
+  public $n;
+  public $asm;
+  public $hex;
+  public $reqSigs;
+  public $type;
+
+  public $txid;
+
+  public function __construct($blockchain, $args, $n = false)
   {
-
+    $this->blockchain = $blockchain;
+    if (is_array($args) || $args instanceof \stdClass ) {
+      $this->_loadArray($args);
+    } else {
+      throw new InvalidArgumentException('attempt to load invalid address from array');
+    }
   }
 
-  /**
-  *
-  * get primary key id for transaction output, inserts if not represented yet
-  *
-  *
-  * @param integer $transaction_id parent transaction primary key
-  * @param array $vout associative array representing vout
-  *
-  * <code>
-  *
-  * $vout_id = TransactionOutput::getID(1, ...);
-  *
-  * </code>
-   */
-  public static function getID($tx, $vout)
+
+  public function stdClass()
   {
+    $flds = [
+      "txid" => $this->txid,
+      "n" => $this->n,
+      "value" => $this->value,
+      "scriptPubKey" => $this->scriptPubKey
+    ];
 
-    self::log("TransactionVout::getId {$tx->transaction_id} {$vout->n}");
-    //echo "processing vout\n";
-
-    $voutsID = $tx->transaction_id."-".$vout->n;
-    if (isset(self::$vouts["$voutsID"]) && self::$vouts["$voutsID"]['vout_id'] > 0)
-    {
-      $vout_id = self::$vouts["$voutsID"]['vout_id'];
-    } else {
-      $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = {$tx->transaction_id} and n = ".$vout->n;
-      $vout_id = BlockChain::$db->value($voutIDSQL);
-      if (!$vout_id)
-      {
-        $vosql = "insert into transactions_vouts (transaction_id, txid, value, n, asm, hex, reqSigs, type) values (".$tx->transaction_id.",'".$tx->txid."','".$vout->value."','".$vout->n."','".$vout->scriptPubKey->asm."','".$vout->scriptPubKey->hex."','".$vout->scriptPubKey->reqSigs."','".$vout->scriptPubKey->type."')";
-        //echo  "\n\n$vosql\n\n";
-        $vout_id = BlockChain::$db->insert($vosql);
-
-        foreach ($vout->scriptPubKey->addresses as $address)
-        {
-          $address_id = Address::getID($address);
-          $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values ($vout_id, $address_id)";
-          BlockChain::$db->insert($aisql);
-          $aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values ({$tx->transaction_id}, $vout_id, $address_id, (".$vout->value."))";
-          BlockChain::$db->insert($aisql);
-          BlockChain::$addressUpdates[] = $address;
-        }
+    if (count($this->addresses)) {
+      $flds['addresses'] = array();
+      foreach ($this->addresses as $address) {
+        $flds['addresses'][] = (string) $address;
       }
     }
+    return (object) $flds;
+  }
 
-    return $vout_id;
+  private function _loadArray($arr)
+  {
+
+    if (false === $arr instanceof \stdClass) {
+      $arr = (object) $arr;
+    }
+
+    $flds = ["transaction_id", "vout_id", "txid", "value", "n", "scriptPubKey"];
+    foreach ($flds as $fld) {
+      $this->{$fld} = $arr->{$fld};
+    }
+
+    if (count($arr->scriptPubKey->addresses)) {
+      foreach ($arr->scriptPubKey->addresses as $address) {
+        $this->addresses[] = $this->blockchain->addresses->get($address);
+      }
+    }
   }
 
 }

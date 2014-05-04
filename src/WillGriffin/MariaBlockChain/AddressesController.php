@@ -165,16 +165,14 @@ class AddressesController extends Object {
     }
 
     $sentSQL = "select ".
+        "distinct receivingVouts.vout_id as vout_id, ".
         "'sent' as type, ".
         "receivingAddresses.address as toAddress, ".
         "targetAddresses.address as fromAddress, ".
-        //"(select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel,".
-        //"(select label from addresses_labels where addresses_labels.address_id = receivingAddresses.address_id) as fromLabel,".
         "receivingVouts.value as value,".
-        "(select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime, ".
-        "(select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid, ".
-        "(select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations, ".
-        "receivingVouts.vout_id as vout_id ".
+        "(select time from transactions where transaction_id = receivingVouts.transaction_id) as txtime, ".
+        "(select txid from transactions where transaction_id = receivingVouts.transaction_id) as txid, ".
+        "(select confirmations from transactions where transaction_id = receivingVouts.transaction_id) as confirmations ".
       "from addresses as targetAddresses ".
         "left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id ".
         "left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id ".
@@ -187,12 +185,12 @@ class AddressesController extends Object {
       "or targetAddresses.address_id in ( ".
           "select alias_address_id ".
           "from addresses_aliases ".
-          "inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id ".
+          "inner join addresses as aliasAddresses on addresses_aliases.address_id = aliasAddresses.address_id ".
           "where ".
             "aliasAddresses.address = \"".$this->blockchain->db->esc($address)."\")) ".
 
       "and receivingVouts.value is not null ".
-      $filterSQL;
+      "$filterSQL group by vout_id";
 
       return $sentSQL;
   }
@@ -233,9 +231,52 @@ class AddressesController extends Object {
   *
   * $receivedSQL = Address::getReceivedSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
   *
+  *
   * ?>
   * </code>
-   */
+  *
+  * Depends on the database containing the following stored function
+  *
+  * drop function if exists sendingAddresses;
+  * delimiter  ~
+  *
+  * create function sendingAddresses (transactionID int)
+  *   returns text reads sql data
+  *   begin
+  *     declare fini integer default 0;
+  *     declare address varchar(100) default "";
+  *     declare addresses text default "";
+  *
+  *     declare transaction_vin_addresses cursor for
+  *       select
+  *         distinct addresses.address
+  *       from addresses
+  *       left join transactions_vouts_addresses on addresses.address_id = transactions_vouts_addresses.address_id
+  *       left join transactions_vins on transactions_vouts_addresses.vout_id = transactions_vins.vout_id
+  *       where transactions_vins.transaction_id = transactionID;
+  *
+  *     declare continue handler
+  *         for not found set fini = 1;
+  *
+  *     open transaction_vin_addresses;
+  *
+  *     address_loop: loop
+  *
+  *       fetch transaction_vin_addresses into address;
+  *       if fini = 1 then
+  *           leave address_loop;
+  *       end if;
+  *
+  *       set addresses = concat(address,',',addresses);
+  *     end loop address_loop;
+  *
+  *     close transaction_vin_addresses;
+  *     return substring(addresses,1,length(addresses)-1);
+  *   end ~
+  *
+  * delimiter ;
+  *
+  */
 
   public function getReceivedSQL($address, $filters = false)
   {
@@ -248,34 +289,24 @@ class AddressesController extends Object {
       $filterSQL .= "and (transactions_vouts.transaction_id = {$filters->transaction_id} or sendingVouts.transaction_id = {$filters->transaction_id})";
     }
 
-
     $receivedSQL = "select ".
-      "\"received\" as type, ".
-      "targetAddresses.address as toAddress, ".
-      "sendingAddresses.address as fromAddress, ".
-      //"(select label from addresses_labels where addresses_labels.address_id = targetAddresses.address_id) as toLabel, ".
-      //"(select label from addresses_labels where addresses_labels.address_id = sendingAddresses.address_id) as fromLabel, ".
-      "transactions_vouts.value as value, ".
-      "(select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime, ".
-      "(select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid, ".
-      "(select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations, ".
-      "transactions_vouts.vout_id as vout_id ".
-    "from addresses as targetAddresses ".
+        "transactions_vouts.vout_id as vout_id, ".
+        "\"received\" as type, ".
+        "targetAddresses.address as toAddress, ".
+        "sendingAddresses(transactions_vouts.transaction_id) as fromAddress, ".
+        "transactions_vouts.value as value, ".
+        "(select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime, ".
+        "(select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid, ".
+        "(select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations ".
+
+      "from addresses as targetAddresses ".
       "left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id ".
       "left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id ".
-      "left outer join transactions_vins on transactions_vins.transaction_id = transactions_vouts.transaction_id ".
-      "left outer join transactions_vouts as sendingVouts on transactions_vins.transaction_id = sendingVouts.transaction_id ".
-      "left outer join transactions_vouts_addresses as sendingVoutAddresses on sendingVouts.vout_id = sendingVoutAddresses.vout_id ".
-      "left outer join addresses as sendingAddresses on sendingVoutAddresses.address_id = sendingAddresses.address_id ".
-    "where ((targetAddresses.address = \"".$this->blockchain->db->esc($address)."\" and targetAddresses.address_id != sendingAddresses.address_id) or ".
-      "targetAddresses.address_id in ( ".
-        "select alias_address_id ".
-        "from addresses_aliases ".
-        "inner join addresses as aliasAddresses on addresses_aliases.alias_address_id = aliasAddresses.address_id ".
-        "where ".
-          "aliasAddresses.address = \"".$this->blockchain->db->esc($address)."\" and aliasAddresses.address_id != sendingAddresses.address_id)) ".
-    "and transactions_vouts.value is not null ".
-    $filterSQL;
+      "where ".
+      "((targetAddresses.address = \"".$this->blockchain->db->esc($address)."\") or targetAddresses.address_id in ( select alias_address_id from addresses_aliases inner join addresses as aliasAddresses on addresses_aliases.address_id = aliasAddresses.address_id where aliasAddresses.address = \"".$this->blockchain->db->esc($address)."\")) ".
+      "and transactions_vouts.value is not null ".
+      $filterSQL;
+
     return $receivedSQL;
 
   }
@@ -352,16 +383,6 @@ class AddressesController extends Object {
 
     return $receivedTotal;
   }
-
-
-
-
-
-
-
-
-
-
 
   /**
   *

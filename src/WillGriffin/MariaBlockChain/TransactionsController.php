@@ -55,9 +55,11 @@ class TransactionsController extends Object
       $idsql = 'select transaction_id from transactions where txid = ?';
       $transaction_id = $this->blockchain->db->value($idsql, ['s', $txid]);
 
+      $this->trace("got transaction_id '$transaction_id'");
+
       if ( !is_numeric($transaction_id) ) {
         $this->trace("transaction_id not numeric, getting info");
-        $info = $this->getRawInfo( $txid );
+        $info = $this->getInfo( $txid );
         $this->trace("getting info got".json_encode($info));
 
 
@@ -69,6 +71,10 @@ class TransactionsController extends Object
             'time, '.
             'inwallet'.
           ') values (?, ?, ?, ?, ?, ?)';
+
+        if (!$info->time && !$info->blocktime) {
+          $info->time = time();
+        }
 
         $insertTransactionFlds = ['issssi',
             $info->confirmations,
@@ -99,10 +105,11 @@ class TransactionsController extends Object
       if ($forceUpdate) {
         $this->trace("update forced");
 
-        $info = $this->getRawInfo($txid, true);
+        $info = $this->getInfo($txid);
         foreach (['time', 'blocktime'] as $fld) {
           $info->{$fld} = date("Y-m-d H:i:s", $info->{$fld});
         }
+        $this->trace("getting info");
 
         $dbinfo = $this->blockchain->db->object( "select ".
           "confirmations, ".
@@ -118,8 +125,11 @@ class TransactionsController extends Object
           'blockhash' => 's',
           'blockindex' => 'i',
           'blocktime' => 's',
-          'time' => 's',
           'inwallet' => 'i'];
+
+        if (!$dbinfo->time) {
+          $infoFields['time'] = 's';
+        }
 
         foreach ($infoFields as $fld => $fldtype) {
           if (!empty($info->{$fld}) && $info->{$fld} != $this->transactions[$txid][$fld]) {
@@ -139,6 +149,9 @@ class TransactionsController extends Object
 
           array_unshift( $updateValues, $updateTypes );
           $usql = "update transactions set $updateFields where transaction_id = ?";
+          $this->trace($usql);
+          $this->trace(json_encode($updateValues));
+
           $this->blockchain->db->update( $usql, $updateValues );
 
           $updated = true;
@@ -206,6 +219,10 @@ class TransactionsController extends Object
 
       //} else {
 
+
+      $this->trace("getting vin_id");
+      $this->trace(json_encode([$tx->transaction_id, $vin->txid, $vin->vout]));
+
       $vin_id = $this->blockchain->db->value("select vin_id ".
         "from transactions_vins ".
         "where transaction_id = ? and txid = ? and vout = ?",
@@ -218,23 +235,29 @@ class TransactionsController extends Object
             "from transactions_vouts ".
             "where transaction_id = ? and n = ?",
             ['ii', $vinvout_transaction_id, $vin->vout]);
-
         } else {
           $vin_vout_id = null;
         }
 
+        $this->trace("inserting vin");
         $visql = "insert into transactions_vins ".
           "(transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id) ".
           "values (?, ?, ?, ?, ?, ?, ?, ?)";
-        $vin_id = $this->blockchain->db->insert($visql, ['isissisi',
+
+        $vivals = ['isissisi',
           $tx->transaction_id,
           $vin->txid,
           $vin->vout,
           $vin->scriptSig->asm,
           $vin->scriptSig->hex,
           $vin->sequence,
-          $vin->coinbase,
-          $vin_vout_id]);
+          (string)$vin->coinbase,
+          $vin_vout_id];
+
+        $this->trace($visql);
+        $this->trace(json_encode($vivals));
+
+        $vin_id = $this->blockchain->db->insert($visql, $vivals);
 
           /* not using this
           if ($vin_vout_id)
@@ -338,8 +361,8 @@ class TransactionsController extends Object
         $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
         $this->blockchain->db->insert($aisql, ['ii', $vout_id, $address_id]);
 
-        $aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values (?, ?, ?, ?)";
-        $this->blockchain->db->insert($aisql, ['iiid', $tx->transaction_id, $vout_id, $address_id, $vout->value]);
+        //$aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values (?, ?, ?, ?)";
+        //$this->blockchain->db->insert($aisql, ['iiid', $tx->transaction_id, $vout_id, $address_id, $vout->value]);
 
       }
 
@@ -367,11 +390,30 @@ class TransactionsController extends Object
   * </code>
    */
 
-  //todo: what's this ismine shit? toast it
-  public function getInfo($txid, $ismine = false)
+  public function getInfo($txid)
   {
     $this->trace("Transaction::getInfo $txid");
     $info = $this->blockchain->rpc->getrawtransaction($txid, 1);
+
+
+    try {
+      $extendedInfo = $this->blockchain->rpc->gettransaction($txid);
+    } catch (\Exception $e) {
+      echo $e->getMessage();
+      $extendedInfo = false;
+    }
+
+    var_dump($extendedInfo);
+
+    if ($extendedInfo) {
+
+      echo "got extended info\n";
+      echo json_encode($extendedInfo);
+
+
+      $info->time = $extendedInfo->time;
+    }
+
     return $info;
   }
 
@@ -392,16 +434,18 @@ class TransactionsController extends Object
   * ?>
   * </code>
    */
-  public function getRawInfo($txid, $forceUpdate = false)
-  {
-    $this->trace("Transaction::getRawInfo $txid");
+
+  //todo: this and getInfo are redundant toast one
+  //public function getRawInfo($txid, $forceUpdate = false)
+  //{
+    //$this->trace("Transaction::getRawInfo $txid");
     //if (count($this->transactions[$txid]) > 0 && $forceUpdate == false)
     //{
     //  return $this->transactions[$txid]['info'];
     //} else {
-      return $this->blockchain->rpc->getrawtransaction($txid, 1);
+    //return $this->blockchain->rpc->getrawtransaction($txid, 1);
     //}
-  }
+  //}
 
 
   /**

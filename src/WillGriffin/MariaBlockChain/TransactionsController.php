@@ -62,7 +62,6 @@ class TransactionsController extends Object
         $info = $this->getInfo( $txid );
         $this->trace("getting info got".json_encode($info));
 
-
         $insertTransactionSQL = 'insert into transactions '.
           '(confirmations, '.
             'blockhash, '.
@@ -331,8 +330,8 @@ class TransactionsController extends Object
     //  $vout_id = $this->vouts["$voutsID"]['vout_id'];
     //} else {
 
-      $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
-      $vout_id = $this->blockchain->db->value($voutIDSQL, ['ii', $tx->transaction_id, $vout->n]);
+    $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
+    $vout_id = $this->blockchain->db->value($voutIDSQL, ['ii', $tx->transaction_id, $vout->n]);
 
     if (!$vout_id) {
 
@@ -356,14 +355,10 @@ class TransactionsController extends Object
       $vout_id = $this->blockchain->db->insert($vosql, $voflds);
 
       foreach ($vout->scriptPubKey->addresses as $address) {
-        $address_id = $this->blockchain->addresses->getID($address);
+        $address = $this->blockchain->addresses->get($address);
 
         $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
-        $this->blockchain->db->insert($aisql, ['ii', $vout_id, $address_id]);
-
-        //$aisql = "insert into addresses_ledger (transaction_id, vout_id, address_id, amount) values (?, ?, ?, ?)";
-        //$this->blockchain->db->insert($aisql, ['iiid', $tx->transaction_id, $vout_id, $address_id, $vout->value]);
-
+        $this->blockchain->db->insert($aisql, ['ii', $vout_id, $address->address_id]);
       }
 
       //}
@@ -399,16 +394,16 @@ class TransactionsController extends Object
     try {
       $extendedInfo = $this->blockchain->rpc->gettransaction($txid);
     } catch (\Exception $e) {
-      echo $e->getMessage();
+      //echo $e->getMessage();
       $extendedInfo = false;
     }
 
-    var_dump($extendedInfo);
+    //var_dump($extendedInfo);
 
     if ($extendedInfo) {
 
-      echo "got extended info\n";
-      echo json_encode($extendedInfo);
+      //echo "got extended info\n";
+      //echo json_encode($extendedInfo);
 
 
       $info->time = $extendedInfo->time;
@@ -465,12 +460,14 @@ class TransactionsController extends Object
   * </code>
    */
   //todo: make second argument optional, if not set get vouts from bitcoind jsonrpc
+  //todo: pointless or handy in a fork? if the latter needs to update the db if change detected
   public function vOutScan($tx, $vouts)
   {
     $this->trace("Transaction::vOutScan {$tx->transaction_id} ".json_encode($vouts));
-    $voutCount = $this->blockchain->db->value("select count(*) ".
-      "from transactions_vouts ".
-      "where transaction_id = ?",
+    $voutCount = $this->blockchain->db->value(
+      "select count(*) ".
+        "from transactions_vouts ".
+        "where transaction_id = ?",
       ['i', $tx->transaction_id]);
 
     $voutFound = count($vouts);

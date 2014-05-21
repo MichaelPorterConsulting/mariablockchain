@@ -2,7 +2,7 @@
 
 namespace WillGriffin\MariaBlockChain;
 
-require_once "BlockChain.php";
+require_once "Transaction.php";
 
 class Block extends Object {
 

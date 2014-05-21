@@ -21,7 +21,8 @@ class Address extends Object {
       $this->_fromID();
     } else if (is_string($args)) {
       $this->address = $args;
-      $this->_fromArray( $this->blockchain->addresses->getInfo($args) );
+      $info = $this->blockchain->addresses->getInfo($this->address);
+      $this->_fromArray( $info );
     } else if (is_array($args) || $args instanceof \stdClass) {
       $this->_fromArray($args);
     }
@@ -65,12 +66,9 @@ class Address extends Object {
       "ismine" => $this->ismine,
       "isscript" => $this->isscript,
       "pubkey" => $this->pubkey,
-      "iscompressed" => $this->iscompressed
+      "iscompressed" => $this->iscompressed,
+      "address_id" => $this->address_id
     ];
-
-    if (is_numeric($this->_address_id)) {
-      $arr['address_id'] = $this->_address_id;
-    }
 
     return $arr;
 

@@ -38,7 +38,11 @@ class BlockChain extends Common {
     if ($this->hasHook('trace')) {
       $this->emit( 'trace', $msg );
     } else {
-      echo $msg;
+      if (gettype($msg) !== "string") {
+        $msg = json_encode($msg);
+      }
+
+      echo $msg."\n";
     }
   }
 
@@ -46,7 +50,7 @@ class BlockChain extends Common {
     if ($this->hasHook('error')) {
       $this->emit( 'error', $msg );
     } else {
-      echo $msg;
+      echo $msg."\n";
       die;
     }
   }

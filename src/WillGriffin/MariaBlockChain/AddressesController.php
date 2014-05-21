@@ -286,7 +286,7 @@ class AddressesController extends Object {
     $filterSQL = "";
 
     if ($filters && is_numeric($filters->transaction_id)) {
-      $filterSQL .= "and (transactions_vouts.transaction_id = {$filters->transaction_id} or sendingVouts.transaction_id = {$filters->transaction_id})";
+      $filterSQL .= "and (transactions_vouts.transaction_id = {$filters->transaction_id} or transactions_vouts.transaction_id = {$filters->transaction_id})";
     }
 
     $receivedSQL = "select ".
@@ -419,12 +419,16 @@ class AddressesController extends Object {
   public function get($address)
   {
 
-    $cached = $this->blockchain->cache->get($address);
-    if ($cached !== false) {
-      return $this->blockchain->cache->get("addr:$address");
-    } else {
-      $address = new Address($this->blockchain, $address);
-      $this->blockchain->cache->set( "addr:$address", $address->toArray(), false, 60 );
+    if ($address) {
+      $cached = $this->blockchain->cache->get($address);
+      if ($cached !== false) {
+        echo "found in cache\n";
+        $address = new Address($this->blockchain, $cached);
+      } else {
+        echo "not cached loading\n";
+        $address = new Address($this->blockchain, $address);
+        $this->blockchain->cache->set( "$address", $address->toArray(), false, 60 );
+      }
       return $address;
     }
   }

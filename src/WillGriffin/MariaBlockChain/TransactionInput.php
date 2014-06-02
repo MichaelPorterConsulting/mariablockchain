@@ -34,7 +34,6 @@ class TransactionInput  extends Object {
       case 'vout':
 
         if ( !($this->_vout instanceof TransactionOutput) ) {
-          echo "\nloading vout\n";
           $this->_vout = $this->blockchain->transactions->getvout($this->txid, $this->n);
         }
 

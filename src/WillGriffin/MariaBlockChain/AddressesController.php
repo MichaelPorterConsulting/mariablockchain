@@ -422,10 +422,8 @@ class AddressesController extends Object {
     if ($address) {
       $cached = $this->blockchain->cache->get($address);
       if ($cached !== false) {
-        echo "found in cache\n";
         $address = new Address($this->blockchain, $cached);
       } else {
-        echo "not cached loading\n";
         $address = new Address($this->blockchain, $address);
         $this->blockchain->cache->set( "$address", $address->toArray(), false, 60 );
       }

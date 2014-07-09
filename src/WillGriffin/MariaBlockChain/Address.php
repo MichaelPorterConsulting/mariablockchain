@@ -15,13 +15,18 @@ class Address extends Object {
   public $iscompressed;
 
   public function __construct($blockchain, $args) {
-    $this->blockchain = $blockchain;
+
+    parent::__construct($blockchain);
+
+    $this->trace(__METHOD__);
+
     if (is_numeric($args)) {
       $this->_address_id = $args;
       $this->_fromID();
     } else if (is_string($args)) {
+      $this->trace("loading from string $args");
       $this->address = $args;
-      $info = $this->blockchain->addresses->getInfo($this->address);
+      $info = $this->bc->addresses->getInfo($this->address);
       $this->_fromArray( $info );
     } else if (is_array($args) || $args instanceof \stdClass) {
       $this->_fromArray($args);
@@ -36,8 +41,8 @@ class Address extends Object {
       case 'address_id':
 
         if (!is_numeric($this->_address_id)) {
-          $this->_address_id = $this->blockchain->addresses->getID($this->address);
-          //$this->blockchain->log("got address_id fine");
+          $this->_address_id = $this->bc->addresses->getID($this->address);
+          //$this->bc->log("got address_id fine");
         }
         return $this->_address_id;
 
@@ -96,7 +101,7 @@ class Address extends Object {
   public function validate()
   {
     $this->trace("validating address {$this->address}");
-    $addrInfo = $this->blockchain->rpc->validateaddress("{$this->address}");
+    $addrInfo = $this->bc->rpc->validateaddress("{$this->address}");
     if ($addrInfo->isvalid)
     {
       $this->address = $addrInfo->address;
@@ -114,18 +119,22 @@ class Address extends Object {
   public function getID()
   {
     if (!is_numeric($this->_address_id)) {
-      $this->_address_id = $this->blockchain->addresses->getID($this->address);
+      $this->_address_id = $this->bc->addresses->getID($this->address);
     }
     return $this->_address_id;
   }
 
   private function _fromID() {
-    $dbinfo = $this->blockchain->db->object("select * from addresses where address_id = ?", ['i', $this->_address_id]);
+    $dbinfo = $this->bc->db->object("select * from addresses where address_id = ?", ['i', $this->_address_id]);
     $this->address = $dbinfo->address;
     $this->pubkey = $dbinfo->pubkey;
   }
 
   private function _fromArray($arr) {
+
+    $this->trace(__METHOD__);
+    $this->trace($arr);
+
 
     if (false === $arr instanceof stdClass) {
       $arr = (object) $arr;
@@ -140,7 +149,8 @@ class Address extends Object {
         $this->_address_id = $arr->address_id;
       }
     } else {
-      throw new InvalidArgumentException('attempt to load invalid address from array');
+      $this->trace($arr);
+      throw new \InvalidArgumentException('attempt to load invalid address from array');
     }
 
 

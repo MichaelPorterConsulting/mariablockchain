@@ -7,24 +7,24 @@ require_once "Common.php";
 class Object extends Common {
 
   //Connections
-  public $blockchain;
+  public $bc;
 
   public $rpc;
   public $db;
   public $cache;
 
   public function __construct($blockchain) {
-    $this->blockchain = $blockchain;
-    $this->rpc = $this->blockchain->rpc;
-    $this->db = $this->blockchain->db;
-    $this->cache = $this->blockchain->cache;
+    $this->bc = $blockchain;
+    $this->rpc = $this->bc->rpc;
+    $this->db = $this->bc->db;
+    $this->cache = $this->bc->cache;
   }
 
   public function trace( $msg ) {
     if ($this->hasHook( 'trace' )) {
       $this->emit( 'trace', $msg );
     } else {
-      $this->blockchain->trace( $msg );
+      $this->bc->trace( $msg );
     }
   }
 
@@ -32,7 +32,7 @@ class Object extends Common {
     if ($this->hasHook( 'error' )) {
       $this->emit( 'error', $msg );
     } else {
-      $this->blockchain->error( $msg );
+      $this->bc->error( $msg );
     }
   }
 

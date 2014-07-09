@@ -16,7 +16,7 @@ class TransactionInput  extends Object {
 
   public function __construct($blockchain, $args)
   {
-    $this->blockchain = $blockchain;
+    $this->bc = $blockchain;
 
     if (is_array($args) || ($args instanceof \stdClass)) {
       $this->_loadArray($args);
@@ -34,7 +34,7 @@ class TransactionInput  extends Object {
       case 'vout':
 
         if ( !($this->_vout instanceof TransactionOutput) ) {
-          $this->_vout = $this->blockchain->transactions->getvout($this->txid, $this->n);
+          $this->_vout = $this->bc->transactions->getvout($this->txid, $this->n);
         }
 
         return $this->_vout;
@@ -74,9 +74,9 @@ class TransactionInput  extends Object {
     }
 
     if (is_numeric($arr->vout)) { //todo: consider not loading until triggered by __get
-      $this->_vout = $this->blockchain->transactions->getvout($arr->txid, $arr->vout);
+      $this->_vout = $this->bc->transactions->getvout($arr->txid, $arr->vout);
     } else if (is_array($arr->vout) || $arr->vout instanceof \stdClass) {
-      $this->_vout = new TransactionOutput($this->blockchain, $arr->vout);
+      $this->_vout = new TransactionOutput($this->bc, $arr->vout);
     }
   }
 }

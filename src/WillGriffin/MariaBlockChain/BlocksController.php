@@ -18,11 +18,11 @@ class BlocksController extends Object
 
     if (gettype($block) === "string") {
 
-      $block = $this->blockchain->rpc->getblock($block);
+      $block = $this->bc->rpc->getblock($block);
     }
 
     $this->trace("blockhash::getID {$block->hash}");
-    $block_id = $this->blockchain->db->value("select block_id ".
+    $block_id = $this->bc->db->value("select block_id ".
       "from blocks ".
       "where hash = ?",
       ['s', $block->hash]);
@@ -42,11 +42,11 @@ class BlocksController extends Object
   {
 
     if (gettype($block) === "string") {
-      $block = $this->blockchain->rpc->getblock("$block");
+      $block = $this->bc->rpc->getblock("$block");
     }
 
     if ($block->hash) {
-      $block_id = $this->blockchain->db->insert("insert into blocks ".
+      $block_id = $this->bc->db->insert("insert into blocks ".
         "(hash, ".
           "confirmations, ".
           "size, ".
@@ -98,7 +98,7 @@ class BlocksController extends Object
           0
         ];
 
-        $transaction_ids = [$this->blockchain->db->insert($insertTransactionSQL, $insertTransactionFlds)];
+        $transaction_ids = [$this->bc->db->insert($insertTransactionSQL, $insertTransactionFlds)];
 
       }
 
@@ -106,7 +106,7 @@ class BlocksController extends Object
 
 
       foreach ($transaction_ids as $transaction_id) {
-        $block_transaction_id = $this->blockchain->db->insert("insert ".
+        $block_transaction_id = $this->bc->db->insert("insert ".
           "into blocks_transactions ".
           "(block_id, transaction_id) ".
           "values (?, ?)",
@@ -131,13 +131,13 @@ class BlocksController extends Object
     $this->trace(__METHOD__);
 
     if (gettype($block) === "string") {
-      $block = $this->blockchain->rpc->getblock("$block");
+      $block = $this->bc->rpc->getblock("$block");
     }
 
     $transaction_ids = [];
     if ($block->hash && count($block->tx)) {
       foreach ($block->tx as $txid) {
-        $transaction_ids[] = $this->blockchain->transactions->getID($txid, true, 0, $update);
+        $transaction_ids[] = $this->bc->transactions->getID($txid, true, 0, $update);
       }
     }
 

@@ -24,7 +24,7 @@ class TransactionOutput extends Object {
 
   public function __construct($blockchain, $args, $n = false)
   {
-    $this->blockchain = $blockchain;
+    $this->bc = $blockchain;
     if (is_array($args) || $args instanceof \stdClass ) {
       $this->_loadArray($args);
     } else {
@@ -65,7 +65,7 @@ class TransactionOutput extends Object {
 
     if (count($arr->scriptPubKey->addresses)) {
       foreach ($arr->scriptPubKey->addresses as $address) {
-        $this->addresses[] = $this->blockchain->addresses->get($address);
+        $this->addresses[] = $this->bc->addresses->get($address);
       }
     }
   }

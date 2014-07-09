@@ -31,7 +31,7 @@ class AddressesController extends Object {
   public function validate($address)
   {
     $this->trace("validating address $address");
-    $addrInfo = $this->blockchain->rpc->validateaddress($this->address);
+    $addrInfo = $this->bc->rpc->validateaddress($this->address);
     if ($addrInfo->isvalid)
     {
       $this->address = $addrInfo->address;
@@ -64,7 +64,9 @@ class AddressesController extends Object {
   public function getInfo($address)
   {
     $this->trace("Address::getInfo $address");
-    $addrInfo = $this->blockchain->rpc->validateaddress($address);
+    $addrInfo = $this->bc->rpc->validateaddress($address);
+    $this->trace($addrInfo);
+
     return $addrInfo;
   }
 
@@ -87,7 +89,7 @@ class AddressesController extends Object {
   public function getID($address)
   {
     $this->trace("Address::getID $address");
-    $address_id = $this->blockchain->db->value("select address_id ".
+    $address_id = $this->bc->db->value("select address_id ".
       "from addresses ".
       "where address = ?",
       ['s', $address]);
@@ -96,20 +98,20 @@ class AddressesController extends Object {
 
     if (!$address_id) {
       $this->trace("no love, creating ");
-      $info = $this->blockchain->rpc->validateaddress("$address");
+      $info = $this->bc->rpc->validateaddress("$address");
 
       $this->trace($info);
       if ($info->isvalid) {
 
         if ($info->ismine) {
-          $account = $this->blockchain->rpc->getaccount($address);
+          $account = $this->bc->rpc->getaccount($address);
           $this->trace("getting account id");
-          $account_id = $this->blockchain->accounts->getID($account);
+          $account_id = $this->bc->accounts->getID($account);
         } else {
           $account_id = 0;
         }
 
-        $address_id = $this->blockchain->db->insert("insert into addresses ".
+        $address_id = $this->bc->db->insert("insert into addresses ".
           "(account_id, ".
             "address, ".
             "pubkey, ".
@@ -180,14 +182,14 @@ class AddressesController extends Object {
         "left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id ".
         "left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id ".
         "left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id ".
-      "where ((targetAddresses.address = \"".$this->blockchain->db->esc($address)."\") ".
+      "where ((targetAddresses.address = \"".$this->bc->db->esc($address)."\") ".
 
       "or targetAddresses.address_id in ( ".
           "select alias_address_id ".
           "from addresses_aliases ".
           "inner join addresses as aliasAddresses on addresses_aliases.address_id = aliasAddresses.address_id ".
           "where ".
-            "aliasAddresses.address = \"".$this->blockchain->db->esc($address)."\")) ".
+            "aliasAddresses.address = \"".$this->bc->db->esc($address)."\")) ".
 
       "and receivingVouts.value is not null ".
       "$filterSQL group by vout_id";
@@ -214,8 +216,8 @@ class AddressesController extends Object {
 
   public function getSent($address)
   {
-    //echo json_encode($this->blockchain->db->assocs($sentSQL));
-    return $this->blockchain->db->assocs($this->getSentSQL($address));
+    //echo json_encode($this->bc->db->assocs($sentSQL));
+    return $this->bc->db->assocs($this->getSentSQL($address));
   }
 
 
@@ -303,7 +305,7 @@ class AddressesController extends Object {
       "left join transactions_vouts_addresses on transactions_vouts_addresses.address_id = targetAddresses.address_id ".
       "left join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id ".
       "where ".
-      "((targetAddresses.address = \"".$this->blockchain->db->esc($address)."\") or targetAddresses.address_id in ( select alias_address_id from addresses_aliases inner join addresses as aliasAddresses on addresses_aliases.address_id = aliasAddresses.address_id where aliasAddresses.address = \"".$this->blockchain->db->esc($address)."\")) ".
+      "((targetAddresses.address = \"".$this->bc->db->esc($address)."\") or targetAddresses.address_id in ( select alias_address_id from addresses_aliases inner join addresses as aliasAddresses on addresses_aliases.address_id = aliasAddresses.address_id where aliasAddresses.address = \"".$this->bc->db->esc($address)."\")) ".
       "and transactions_vouts.value is not null ".
       $filterSQL;
 
@@ -330,7 +332,7 @@ class AddressesController extends Object {
 
   public function getReceived($address)
   {
-    return $this->blockchain->db->assocs($this->getReceivedSQL($address));
+    return $this->bc->db->assocs($this->getReceivedSQL($address));
   }
 
 
@@ -379,7 +381,7 @@ class AddressesController extends Object {
     "and sendingVoutsAddresses.address_id != receivingVoutsAddresses.address_id ".
     "group by receivingVoutsAddresses.address_id";
 
-    $receivedTotal = $this->blockchain->db->value($sql, $sqlargs);
+    $receivedTotal = $this->bc->db->value($sql, $sqlargs);
 
     return $receivedTotal;
   }
@@ -405,27 +407,31 @@ class AddressesController extends Object {
     if ($filters) {
       $filters = (object)$filters;
       if (is_numeric($filters->txid)) {
-        $filters->transaction_id = $this->blockchain->transactions->getID($txid);
+        $filters->transaction_id = $this->bc->transactions->getID($txid);
       }
     }
 
     $this->trace("getting ledger $address $secret_id");
     $ledgerSQL = $this->getReceivedSQL($address, $filters)." union ".$this->getSentSQL($address, $filters);
     $this->trace($ledgerSQL);
-    return $this->blockchain->db->assocs($ledgerSQL);
+    return $this->bc->db->assocs($ledgerSQL);
   }
 
 
   public function get($address)
   {
+    $this->trace( __METHOD__." ".$address );
+    $this->trace( get_class( $this->bc ) );
 
     if ($address) {
-      $cached = $this->blockchain->cache->get($address);
+      $cached = $this->bc->cache->get($address);
       if ($cached !== false) {
-        $address = new Address($this->blockchain, $cached);
+        $this->trace( "getting from cache" );
+        $address = new Address($this->bc, $cached);
       } else {
-        $address = new Address($this->blockchain, $address);
-        $this->blockchain->cache->set( "$address", $address->toArray(), false, 60 );
+        $this->trace( "getting address" );
+        $address = new Address($this->bc, $address);
+        $this->bc->cache->set( "$address", $address->toArray(), false, 60 );
       }
       return $address;
     }

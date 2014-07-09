@@ -29,14 +29,14 @@ class Transaction extends Object {
 
   public function __construct($blockchain, $tx) {
 
-    $this->blockchain = $blockchain;
+    $this->bc = $blockchain;
     $this->_vars = [];
 
     if (is_numeric($tx)) {
       $this->_vars['transaction_id'] = $tx;
     } else if (is_string($tx)) {
       $this->txid = $tx;
-      $this->_loadArray( $this->blockchain->transactions->getInfo($tx) );
+      $this->_loadArray( $this->bc->transactions->getInfo($tx) );
     } else if (is_array($tx) || $tx instanceof \stdClass) {
       $this->_loadArray($tx);
     }
@@ -51,9 +51,9 @@ class Transaction extends Object {
       case 'transaction_id':
 
         if (!array_key_exists('transaction_id', $this->_vars)) {
-          $this->blockchain->trace('getting transaction id');
-          $this->_vars['transaction_id'] = $this->blockchain->transactions->getID($this->txid);
-          $this->blockchain->trace(json_encode($this->_vars));
+          $this->bc->trace('getting transaction id');
+          $this->_vars['transaction_id'] = $this->bc->transactions->getID($this->txid);
+          $this->bc->trace(json_encode($this->_vars));
         }
         return $this->_vars['transaction_id'];
 
@@ -121,7 +121,7 @@ class Transaction extends Object {
 
     if (is_array($arr->vin)) {
       foreach ($arr->vin as $vinArr) {
-        $vin = new TransactionInput($this->blockchain, $vinArr);
+        $vin = new TransactionInput($this->bc, $vinArr);
         $vinTotal += $vin->vout->value;
         $this->vin[] = $vin;
       }
@@ -130,7 +130,7 @@ class Transaction extends Object {
     if (is_array($arr->vout)) {
       foreach ($arr->vout as $voutArr) {
         //echo json_encode($vout)."\n";
-        $vout = new TransactionOutput($this->blockchain, $voutArr);
+        $vout = new TransactionOutput($this->bc, $voutArr);
         $voutTotal += $vout->value;
         $this->vout[] = $vout;
       }

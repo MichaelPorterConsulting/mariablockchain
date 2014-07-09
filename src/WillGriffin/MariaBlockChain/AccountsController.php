@@ -29,9 +29,9 @@ class AccountsController extends Object {
   public function getID($account)
   {
     $this->trace("Looking up account $account");
-    $account_id = $this->blockchain->db->value("select account_id from wallet_accounts where name = ?", ['s',$account]);
+    $account_id = $this->bc->db->value("select account_id from wallet_accounts where name = ?", ['s',$account]);
     if (!$account_id) {
-        $account_id = $this->blockchain->db->insert("insert into wallet_accounts (name) values (?)", ['s', $account]);
+        $account_id = $this->bc->db->insert("insert into wallet_accounts (name) values (?)", ['s', $account]);
     }
     return $account_id;
   }

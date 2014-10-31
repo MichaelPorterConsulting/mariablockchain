@@ -22,6 +22,9 @@ class TransactionOutput extends Object {
 
   public $txid;
 
+  public $spentat;
+
+
   public function __construct($blockchain, $args, $n = false)
   {
     $this->bc = $blockchain;
@@ -39,7 +42,8 @@ class TransactionOutput extends Object {
       "txid" => $this->txid,
       "n" => $this->n,
       "value" => $this->value,
-      "scriptPubKey" => $this->scriptPubKey
+      "scriptPubKey" => $this->scriptPubKey,
+      "spentat" => $this->spentat
     ];
 
     if (count($this->addresses)) {
@@ -58,7 +62,7 @@ class TransactionOutput extends Object {
       $arr = (object) $arr;
     }
 
-    $flds = ["transaction_id", "vout_id", "txid", "value", "n", "scriptPubKey"];
+    $flds = ["transaction_id", "vout_id", "txid", "value", "n", "scriptPubKey", "spentat"];
     foreach ($flds as $fld) {
       $this->{$fld} = $arr->{$fld};
     }

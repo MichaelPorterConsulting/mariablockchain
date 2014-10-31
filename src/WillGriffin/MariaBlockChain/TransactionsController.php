@@ -43,8 +43,8 @@ class TransactionsController extends Object
    */
 
   //todo: refactor
-  public function getID($txid, $forceScan = false, $depth = 1, $forceUpdate = false)
-  {
+  public function getID($txid, $forceScan = false, $depth = 1, $forceUpdate = false) {
+
     $this->trace("Transaction::getID $txid");
     $updated = false;
     $timestarted = time();
@@ -204,7 +204,7 @@ class TransactionsController extends Object
   * $vout_id = TransactionOutput::getID(1, ...);
   *
   * </code>
-   */
+  */
   public function getVinID($tx, $vin, $depth = 0, $followtx = true)
   {
 
@@ -258,6 +258,12 @@ class TransactionsController extends Object
 
         $vin_id = $this->bc->db->insert($visql, $vivals);
 
+        //tag the corresponding vout as spent in this transaction
+        $this->bc->db->update(
+          "update transactions_vouts set spentat = ?, spentat_id = ? where txid = ? and vout = ?",
+          ['sss',$tx->txid, $tx->transaction_id, $vin->txid, $vin->vout]);
+
+
           /* not using this
           if ($vin_vout_id)
           {
@@ -299,7 +305,6 @@ class TransactionsController extends Object
     //$this->vins["{$tx->transaction_id}-{$vin->vout}"]["vin_id"] = $vin_id;
     return $vin_id;
   }
-
 
 
   /**
@@ -523,11 +528,13 @@ class TransactionsController extends Object
 
 
 
-  public function get($txid)
+  public function get($txid, $requery = false)
   {
     $this->trace("Transaction::get $txid");
     $cached = $this->bc->cache->get("tx:$txid");
-    if ($cached !== false) {
+
+    $this->trace($cached);
+    if ($cached !== false && $requery === false) {
 
       $this->trace("loading transaction from cache");
       $this->trace($cached);
@@ -536,7 +543,6 @@ class TransactionsController extends Object
       $this->trace("loading transaction from txid");
       $tx = new Transaction($this->bc, $txid);
       $this->bc->cache->set( "tx:$txid", $tx->stdClass(), false, 60 );
-      return $tx;
     }
 
     return $tx;
@@ -557,6 +563,97 @@ class TransactionsController extends Object
     }
 
     return $vout;
+  }
+
+
+
+  /**
+  *
+  * roll a transaction back, for those that end up in a shitty fork
+  *
+  * @param integer $txid the transaction to roll back
+  *
+  * <code>
+  *
+  * $vout_id = TransactionOutput::getID(1, ...);
+  *
+  * </code>
+  */
+
+  public function rollback($txid) {
+
+    $this->bc->db->update("update transactions_vouts set spentat = null where txid = ?", ['s', $txid]);
+  }
+
+
+
+  /**
+  *
+  *
+  *
+  * @param integer $txid checks and updates a transactions vouts and returns a list of those that are unspent
+  *
+  * <code>
+  *
+  * $vout_id = TransactionOutput::getID(1, ...);
+  *
+  * </code>
+  */
+
+  public function listunspents($txid) {
+    $this->trace(__METHOD__);
+    $this->trace($txid);
+
+    $tx = $this->get($txid, true);
+    $unspents = [];
+
+    $updated = false;
+
+    foreach ($tx->vout as $vout) {
+
+      if (empty($vout->spentat)) {
+
+        $this->trace('found unspent');
+
+        $vsql = 'select '.
+            'vintx.txid as txid, '.
+            'vintx.transaction_id as transaction_id '.
+          'from transactions_vins '.
+          'left join transactions as vintx on transactions_vins.transaction_id = vintx.transaction_id '.
+          'where transactions_vins.txid = ? and transactions_vins.vout = ?';
+
+        $vflds = ['si', $tx->txid, $vout->n];
+        $vin = $this->bc->db->object($vsql, $vflds);
+
+        if ($vin) {
+
+          // update the transaction_vout
+          // this should on be needed in special circumstances and is here mostly just in case
+
+          $usql = "update transactions_vouts set spentat = ? where txid = ? and n = ?";
+          $uflds = ['ssi',$vin->txid, $tx->txid, $vout->n];
+
+          $this->trace($usql);
+          $this->trace($uflds);
+
+          $this->bc->db->update($usql, $uflds);
+
+          $updated = true;
+
+        } else { //no record in database indicating it was spent, return true
+
+          $unspents[] = $vout;
+
+        }
+
+      }
+
+
+      /* todo: confirm with blockchain before making logical decisions about spending */
+
+
+    }
+
   }
 
 

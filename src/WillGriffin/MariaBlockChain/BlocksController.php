@@ -92,9 +92,9 @@ class BlocksController extends Object
         $insertTransactionFlds = ['issssi',
           $block->confirmations,
           $block->blockhash,
-          date("Y-m-d H:i:s", $block->time),
+          $block->time,
           $block->tx[0],
-          date("Y-m-d H:i:s", $block->time),
+          $block->time,
           0
         ];
 

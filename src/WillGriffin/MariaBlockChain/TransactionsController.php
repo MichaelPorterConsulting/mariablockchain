@@ -78,9 +78,9 @@ class TransactionsController extends Object
         $insertTransactionFlds = ['issssi',
             $info->confirmations,
             $info->blockhash,
-            date("Y-m-d H:i:s", $info->blocktime),
+            $info->blocktime,
             $info->txid,
-            date("Y-m-d H:i:s", $info->time),
+            $info->time,
             intval($info->inwallet)
           ];
 
@@ -105,11 +105,11 @@ class TransactionsController extends Object
         $this->trace("update forced");
 
         $info = $this->getInfo($txid);
-        foreach (['time', 'blocktime'] as $fld) {
+/*        foreach (['time', 'blocktime'] as $fld) {
           $info->{$fld} = date("Y-m-d H:i:s", $info->{$fld});
         }
         $this->trace("getting info");
-
+*/
         $dbinfo = $this->bc->db->object( "select ".
           "confirmations, ".
           "blockhash, ".
@@ -537,8 +537,11 @@ class TransactionsController extends Object
     if ($cached !== false && $requery === false) {
 
       $this->trace("loading transaction from cache");
-      $this->trace($cached);
+      //$this->trace($cached);
       $tx = new Transaction($this->bc, $cached);
+      $this->trace('got transaction fine');
+      //var_dump($tx);
+      $this->trace( $tx );
     } else {
       $this->trace("loading transaction from txid");
       $tx = new Transaction($this->bc, $txid);

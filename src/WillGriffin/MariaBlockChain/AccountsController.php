@@ -36,12 +36,22 @@ class AccountsController extends Object {
     return $account_id;
   }
 
-  public function getLedger($account)
+  public function getLedger($account, $filters)
   {
-    $this->trace(__METHOD__);
+    $this->trace(__METHOD__." ".$account);
 
-    $sentSQL = $this->bc->addresses->getSentSQL("sendingAddresses.address in (select address from wallet_addresses where account = '$account')");
-    $receivedSQL = $this->bc->addresses->getReceivedSQL("receivingAddresses.address in (select address from wallet_addresses where account = '$account')");
+    if (empty($account)) {
+      echo "invalid account";
+      die;
+    }
+
+    $accountSubQuery = $this->addressesSQL($account);
+    $sendingAddressesSQL = "sendingAddresses.address in ($accountSubQuery)";
+    $receivingAddressesSQL = "receivingAddresses.address in ($accountSubQuery)";
+    $filterSQL = $this->bc->addresses->getFilterSQL($filters);
+
+    $sentSQL = $this->bc->addresses->getSentSQL($sendingAddressesSQL, $filterSQL);
+    $receivedSQL = $this->bc->addresses->getReceivedSQL($receivingAddressesSQL, $filterSQL);
     $ledgerSQL = "$receivedSQL union $sentSQL";
     $this->trace($ledgerSQL);
     return $this->bc->db->assocs($ledgerSQL);
@@ -72,7 +82,7 @@ class AccountsController extends Object {
 
     $sql =  "select address ".
       "from wallet_addresses ".
-      "where wallet_addresses.account = '".$this->bc->db->esc($account)."')";
+      "where wallet_addresses.account = '".$this->bc->db->esc($account)."'";
 
     return $sql;
   }

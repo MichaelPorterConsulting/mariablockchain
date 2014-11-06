@@ -214,7 +214,7 @@ class AddressesController extends Object {
         //"(select confirmations from transactions where transaction_id = receivingVouts.transaction_id) as confirmations ".
 
         "transactions.blockindex as blockindex, ".
-        "transactions.time as txtime, ".
+        "unix_timestamp(transactions.time) as txtime, ".
         "transactions.txid as txid ".
 
 
@@ -345,7 +345,7 @@ class AddressesController extends Object {
         //"(select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations ".
 
         "transactions.blockindex as blockindex, ".
-        "transactions.time as txtime, ".
+        "unix_timestamp(transactions.time) as txtime, ".
         "transactions.txid as txid ".
 
 

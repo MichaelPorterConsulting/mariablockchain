@@ -7,17 +7,42 @@ require_once "Block.php";
 class BlocksController extends Object
 {
 
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   public function __construct($blockchain) {
 
     parent::__construct($blockchain);
 
   }
 
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   public function getID($block)
   {
-
+    $this->trace(__METHOD__);
     if (gettype($block) === "string") {
-
       $block = $this->bc->rpc->getblock($block);
     }
 
@@ -31,16 +56,29 @@ class BlocksController extends Object
 
     if (!$block_id) {
       $this->trace("no love, creating ");
-      $block_id = $this->insertBlock($block);
+      $block_id = $this->insertBlock($block, false);
     }
     $this->trace("block_id $block_id");
 
     return $block_id;
   }
 
-  public function insertBlock($block)
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function insertBlock($block, $insertTransactions = true)
   {
-
+    $this->trace(__METHOD__);
     if (gettype($block) === "string") {
       $block = $this->bc->rpc->getblock("$block");
     }
@@ -77,40 +115,40 @@ class BlocksController extends Object
           $block->last_update         //s
         ]);
 
-      if ($block->height > 0) {
-        $transaction_ids = $this->getTransactionIds($block);
-      } else { //insert genesis block special
-        $insertTransactionSQL = 'insert into transactions '.
-          '(confirmations, '.
-            'blockhash, '.
-            'blocktime, '.
-            'txid, '.
-            'time, '.
-            'inwallet'.
-          ') values (?, ?, ?, ?, ?, ?)';
+      if ($insertTransactions === true) {
 
-        $insertTransactionFlds = ['issssi',
-          $block->confirmations,
-          $block->blockhash,
-          $block->time,
-          $block->tx[0],
-          $block->time,
-          0
-        ];
+        if ($block->height > 0) {
+          $transaction_ids = $this->getTransactionIds($block);
+        } else { //insert genesis block special
+          $insertTransactionSQL = 'insert into transactions '.
+            '(confirmations, '.
+              'blockhash, '.
+              'blocktime, '.
+              'txid, '.
+              'time, '.
+              'inwallet'.
+            ') values (?, ?, ?, ?, ?, ?)';
 
-        $transaction_ids = [$this->bc->db->insert($insertTransactionSQL, $insertTransactionFlds)];
+          $insertTransactionFlds = ['issssi',
+            $block->confirmations,
+            $block->blockhash,
+            $block->time,
+            $block->tx[0],
+            $block->time,
+            0
+          ];
 
-      }
+          $transaction_ids = [$this->bc->db->insert($insertTransactionSQL, $insertTransactionFlds)];
+        }
 
+        foreach ($transaction_ids as $transaction_id) {
+          $block_transaction_id = $this->bc->db->insert("insert ".
+            "into blocks_transactions ".
+            "(block_id, transaction_id) ".
+            "values (?, ?)",
+            ['ii', $block_id, $transaction_id]);
+        }
 
-
-
-      foreach ($transaction_ids as $transaction_id) {
-        $block_transaction_id = $this->bc->db->insert("insert ".
-          "into blocks_transactions ".
-          "(block_id, transaction_id) ".
-          "values (?, ?)",
-          ['ii', $block_id, $transaction_id]);
       }
 
     } else {
@@ -120,11 +158,19 @@ class BlocksController extends Object
     return $block_id;
   }
 
-  /*
+  /**
   *
   *
   * gets transaction_ids, inserting them into db if not already existent
   *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
   */
   public function getTransactionIds($block, $update = false)
   {
@@ -143,5 +189,64 @@ class BlocksController extends Object
 
     return $transaction_ids;
   }
+
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function get($blockhash, $requery = false)
+  {
+    $this->trace(__METHOD__." $blockhash");
+    $cached = $this->bc->cache->get("block:$blockhash");
+
+    if ($cached !== false && $requery === false) {
+
+      $block = new Block($this->bc, $cached);
+
+    } else {
+      $this->trace("loading block from blockhash");
+      $block = new Block($this->bc, $blockhash);
+      $this->bc->cache->set( "block:$blockhash", $block->stdClass(), false, 60 );
+    }
+
+    return $block;
+  }
+
+
+
+  /**
+  *
+  * retrieves info about a block
+  *
+  *
+  * @param string blockhash block hash
+  *
+  * <code>
+  * <?php
+  *
+  * $blockInfo = Blocks::getInfo('foobar');
+  *
+  * ?>
+  * </code>
+   */
+
+  public function getInfo($blockhash)
+  {
+    $this->trace(__METHOD__." $blockhash");
+    $info = $this->bc->rpc->getblock($blockhash);
+
+    return $info;
+  }
+
+
 
 }

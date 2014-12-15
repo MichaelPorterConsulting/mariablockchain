@@ -17,7 +17,6 @@ class Transaction extends Object {
 
   public $confirmations;
   public $blockhash;
-  public $blockindex;
   public $blocktime;
   public $txid;
   public $time;
@@ -27,10 +26,12 @@ class Transaction extends Object {
   public $vin;
   public $vout;
 
-  public function __construct($blockchain, $tx) {
-
+  public function __construct($blockchain, $tx)
+  {
     $this->bc = $blockchain;
     $this->_vars = [];
+
+    $this->trace(__METHOD__);
 
     if (is_numeric($tx)) {
       $this->_vars['transaction_id'] = $tx;
@@ -45,7 +46,7 @@ class Transaction extends Object {
 
   public function __get($var)
   {
-
+    $this->trace(__METHOD__);
     switch ($var)
     {
       case 'transaction_id':
@@ -69,7 +70,7 @@ class Transaction extends Object {
 
   public function stdClass()
   {
-
+    $this->trace(__METHOD__);
     if (count($this->vin) > 0) {
       foreach($this->vin as $vin) {
         $vinArr[] = $vin->stdClass();
@@ -92,7 +93,6 @@ class Transaction extends Object {
       "fee" => $this->fee,
       "confirmations" => $this->confirmations,
       "blockhash" => $this->blockhash,
-      "blockindex" => $this->blockindex,
       "blocktime" => $this->blocktime,
       "time" => $this->time,
       "vin" => $vinArr,
@@ -104,23 +104,26 @@ class Transaction extends Object {
 
   public function json()
   {
+    $this->trace(__METHOD__);
     return json_encode($this->stdClass());
   }
 
 
   private function _loadArray($arr)
   {
+    $this->trace(__METHOD__);
     if (false === $arr instanceof \stdClass) {
       $arr = (object) $arr;
     }
 
-    $flds = ["txid", "amount", "confirmations", "blockhash", "blockindex", "blocktime", "time"];
+    $flds = ["txid", "amount", "confirmations", "blockhash", "blocktime", "time"];
     foreach ($flds as $fld) {
       $this->{$fld} = $arr->{$fld};
     }
 
     if (is_array($arr->vin)) {
       foreach ($arr->vin as $vinArr) {
+        //echo json_encode($vinArr), "\n\n";
         $vin = new TransactionInput($this->bc, $vinArr);
         $vinTotal += $vin->vout->value;
         $this->vin[] = $vin;
@@ -139,6 +142,8 @@ class Transaction extends Object {
     $this->amount = $voutTotal;
     $this->fee = $vinTotal - $voutTotal;
 
+    $this->trace('txTime: '.$this->time);
+    $this->trace('txBlockTime: '.$this->blocktime);
   }
 
 }

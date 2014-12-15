@@ -21,7 +21,21 @@ class BlockChain extends Common {
   public $accounts;
   public $blocks;
 
-  public function __construct( $rpc, $db, $cache ) {
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function __construct( $rpc, $db, $cache )
+  {
 
     $this->db = $db;
     $this->rpc = $rpc;
@@ -34,7 +48,21 @@ class BlockChain extends Common {
 
   }
 
-  public function trace( $msg ) {
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function trace( $msg )
+  {
     if ($this->hasHook('trace')) {
       $this->emit( 'trace', $msg );
     } else {
@@ -46,7 +74,21 @@ class BlockChain extends Common {
     }
   }
 
-  public function error( $msg ) {
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function error( $msg )
+  {
     if ($this->hasHook('error')) {
       $this->emit( 'error', $msg );
     } else {

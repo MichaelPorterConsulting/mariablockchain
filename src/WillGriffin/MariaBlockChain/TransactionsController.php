@@ -15,12 +15,63 @@ class TransactionsController extends Object
 
   public $maxDepth = 5;
 
-  public function __construct($blockchain) {
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function __construct($blockchain)
+  {
 
     parent::__construct($blockchain);
 
   }
 
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
+  public function decoderaw($raw)
+  {
+
+    $info = $this->bc->rpc->decoderawtransaction($raw);
+
+    if (!$info->confirmations) {
+      $info->confirmations = 0;
+    }
+
+    if (!$info->blocktime) {
+      $info->blocktime = null;
+    }
+
+    if (!$info->blockhash) {
+      $info->blockhash = null;
+    }
+
+    if (!$info->time) {
+      $info->time = time();
+    }
+
+    return $info;
+
+  }
 
   /**
   *
@@ -43,24 +94,38 @@ class TransactionsController extends Object
    */
 
   //todo: refactor
-  public function getID($txid, $forceScan = false, $depth = 1, $forceUpdate = false) {
+  public function getID($tx, $forceScan = false, $depth = 1, $forceUpdate = false)
+  {
 
-    $this->trace("Transaction::getID $txid");
+    $this->trace(__METHOD__." ".json_encode($tx));
     $updated = false;
     $timestarted = time();
+
+    $info = false;
 
     if ($depth <= $this->maxDepth)
     {
 
+      if (is_string($tx)) { //if txstr is a raw transaction
+        $txid = $tx;
+      } else if ($tx instanceof \stdClass && is_string($tx->txid)) {
+        $txid = $tx->txid;
+        $info = $tx;
+      } else {
+        $this->trace("error: invalid transaction");
+        $this->error("invalid transaction");
+        die;
+      }
+
       $idsql = 'select transaction_id from transactions where txid = ?';
       $transaction_id = $this->bc->db->value($idsql, ['s', $txid]);
 
-      $this->trace("got transaction_id '$transaction_id'");
-
       if ( !is_numeric($transaction_id) ) {
-        $this->trace("transaction_id not numeric, getting info");
-        $info = $this->getInfo( $txid );
-        $this->trace("getting info got".json_encode($info));
+
+        if (!$info) {
+          $info = $this->getInfo( $txid );
+          $this->trace($info);
+        }
 
         $insertTransactionSQL = 'insert into transactions '.
           '(confirmations, '.
@@ -69,20 +134,21 @@ class TransactionsController extends Object
             'txid, '.
             'time, '.
             'inwallet'.
-          ') values (?, ?, ?, ?, ?, ?)';
+          ') values (?, ?, from_unixtime(?), ?, from_unixtime(?), ?)';
 
         if (!$info->time && !$info->blocktime) {
           $info->time = time();
         }
 
-        $insertTransactionFlds = ['issssi',
-            $info->confirmations,
+        $insertTransactionFlds = ['isisii',
+            intval($info->confirmations),
             $info->blockhash,
-            $info->blocktime,
+            intval($info->blocktime),
             $info->txid,
-            $info->time,
+            intval($info->time),
             intval($info->inwallet)
           ];
+
 
         $transaction_id = $this->bc->db->insert( $insertTransactionSQL, $insertTransactionFlds );
 
@@ -102,38 +168,35 @@ class TransactionsController extends Object
       }
 
       if ($forceUpdate) {
-        $this->trace("update forced");
-
-        $info = $this->getInfo($txid);
-/*        foreach (['time', 'blocktime'] as $fld) {
-          $info->{$fld} = date("Y-m-d H:i:s", $info->{$fld});
+        if ($info === false) {
+          $info = $this->getInfo( $txid );
         }
-        $this->trace("getting info");
-*/
-        $dbinfo = $this->bc->db->object( "select ".
+
+        $dbinfo = $this->bc->db->object("select ".
           "confirmations, ".
           "blockhash, ".
-          "blockindex, ".
           "txid, ".
-          "time ".
+          "unix_timestamp(blocktime) as blocktime, ".
+          "unix_timestamp(time) as time ".
           "from transactions where transaction_id = ?",
           ['i', $transaction_id]);
 
         $infoFields = [
           'confirmations' => 'i',
           'blockhash' => 's',
-          'blockindex' => 'i',
-          'blocktime' => 's',
+          'blocktime' => 'i',
+          'time' => 'i',
           'inwallet' => 'i'];
-
-        if (!$dbinfo->time) {
-          $infoFields['time'] = 's';
-        }
 
         foreach ($infoFields as $fld => $fldtype) {
           if (!empty($info->{$fld}) && $info->{$fld} != $this->transactions[$txid][$fld]) {
 
-            $updateFields .= "$fld = ?,";
+            if (in_array($fld, ['time','blocktime'])) {
+              $updateFields .= "$fld = from_unixtime(?),";
+            } else {
+              $updateFields .= "$fld = ?,";
+            }
+
             $updateValues[] = $info->{$fld};
             $updateTypes .=  $fldtype;
 
@@ -148,15 +211,9 @@ class TransactionsController extends Object
 
           array_unshift( $updateValues, $updateTypes );
           $usql = "update transactions set $updateFields where transaction_id = ?";
-          $this->trace($usql);
-          $this->trace(json_encode($updateValues));
-
           $this->bc->db->update( $usql, $updateValues );
-
           $updated = true;
         }
-
-        //$this->transactions[$txid]['info'] = $info;
 
       }
 
@@ -174,9 +231,6 @@ class TransactionsController extends Object
 
         $updated = true;
       }
-
-      //}
-      //$this->transactions[$txid]['lastScanned'] = time();
 
       if ($updated) {
         $this->emit("updated", $txid);
@@ -208,19 +262,10 @@ class TransactionsController extends Object
   public function getVinID($tx, $vin, $depth = 0, $followtx = true)
   {
 
-    $this->trace("TransactionVin::getId $transaction_id".json_encode($vin));
+    $this->trace(__METHOD__." $transaction_id ".json_encode($vin));
 
     if ($vin->txid && isset($vin->vout)) {
       $vinsID = $vin->txid."-".$vin->vout;
-      //if (isset($this->vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0) {
-
-      //  $vin_id = $vins[$vinsID]['vin_id'];
-
-      //} else {
-
-
-      $this->trace("getting vin_id");
-      $this->trace(json_encode([$tx->transaction_id, $vin->txid, $vin->vout]));
 
       $vin_id = $this->bc->db->value("select vin_id ".
         "from transactions_vins ".
@@ -238,7 +283,7 @@ class TransactionsController extends Object
           $vin_vout_id = null;
         }
 
-        $this->trace("inserting vin");
+        //$this->trace("inserting vin");
         $visql = "insert into transactions_vins ".
           "(transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id) ".
           "values (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -250,42 +295,24 @@ class TransactionsController extends Object
           $vin->scriptSig->asm,
           $vin->scriptSig->hex,
           $vin->sequence,
-          (string)$vin->coinbase,
+          (string) $vin->coinbase,
           $vin_vout_id];
 
-        $this->trace($visql);
-        $this->trace(json_encode($vivals));
+        //$this->trace($visql);
+        //$this->trace(json_encode($vivals));
 
         $vin_id = $this->bc->db->insert($visql, $vivals);
 
         //tag the corresponding vout as spent in this transaction
-        $this->bc->db->update(
-          "update transactions_vouts set spentat = ?, spentat_id = ? where txid = ? and vout = ?",
-          ['sss',$tx->txid, $tx->transaction_id, $vin->txid, $vin->vout]);
+        if ($vin_vout_id > 0) {
+          $this->bc->db->update(
+            "update transactions_vouts set spentat = ? where vout_id = ?",
+            ['ss',$tx->txid, $vin_vout_id]);
+        }
 
-
-          /* not using this
-          if ($vin_vout_id)
-          {
-            $vinvoutaddresses = $this->bc->db->assocs("select transactions_vouts_addresses.address_id as address_id, transactions_vouts.value as amount from transactions_vouts_addresses inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id where transactions_vouts_addresses.vout_id = $vin_vout_id");
-            if (count($vinvoutaddresses) > 0)
-            {
-              foreach ($vinvoutaddresses as $vinaddress)
-              {
-                  $aisql = "insert into addresses_ledger (transaction_id, vout_id, vin_id, address_id, amount) values ({$tx->transaction_id}, $vin_vout_id, $vin_id, ".$vinaddress['address_id'].", ".$vinaddress['amount']." * -1)";
-                  $this->bc->db->insert($aisql);
-              }
-            }
-          }*/
-
-        //}
       }
     } else if ($vin->sequence > 0 && !empty($vin->coinbase)) { // Generation
 
-      //$vinsID = $vin->txid."-".$vin->vout;
-      //if (isset($this->vins[$vinsID]) && $vins[$vinsID]['vin_id'] > 0) {//todo: memcache
-      //  $vin_id = $vins[$vinsID]['vin_id'];
-      //} else {
       $vin_id = $this->bc->db->value("select vin_id ".
         "from transactions_vins ".
         "where transaction_id = ? and txid = ? and sequence = ? and coinbase = ?",
@@ -297,12 +324,11 @@ class TransactionsController extends Object
           "values (?, ?, ?, ?)";
         $vin_id = $this->bc->db->insert($visql, ['iisi', $tx->transaction_id, $vin->sequence, $vin->coinbase, 0]);
       }
-      //}
+
     } else {
       $this->trace("can not compute input ".json_encode($vin));
     }
 
-    //$this->vins["{$tx->transaction_id}-{$vin->vout}"]["vin_id"] = $vin_id;
     return $vin_id;
   }
 
@@ -324,21 +350,12 @@ class TransactionsController extends Object
   public function getVoutID($tx, $vout)
   {
 
-    $this->trace("TransactionVout::getId {$tx->transaction_id} {$vout->n}");
-    //echo "processing vout\n";
+    $this->trace(__METHOD__." {$tx->transaction_id} {$vout->n}");
 
-    $this->trace( json_encode($tx) );
-
-
-    //$voutsID = $tx->transaction_id."-".$vout->n;
-    //if (isset($this->vouts["$voutsID"]) && $this->vouts["$voutsID"]['vout_id'] > 0) { //todo: memcache
-    //  $vout_id = $this->vouts["$voutsID"]['vout_id'];
-    //} else {
 
     $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
     $voutIDFlds = ['ii', $tx->transaction_id, $vout->n];
-    $this->trace( $voutIDSQL );
-    $this->trace( $voutIDFlds );
+
     $vout_id = $this->bc->db->value($voutIDSQL, $voutIDFlds);
 
     if (!$vout_id) {
@@ -357,29 +374,20 @@ class TransactionsController extends Object
         $vout->scriptPubKey->reqSigs,
         $vout->scriptPubKey->type];
 
-      $this->trace( $vosql );
-      $this->trace( json_encode($voflds) );
-
       $vout_id = $this->bc->db->insert($vosql, $voflds);
 
-      $this->trace('got vout_id '.$vout_id);
-
-
       foreach ($vout->scriptPubKey->addresses as $address) {
-        $this->trace("getting scriptPubkey address $address");
         $address = $this->bc->addresses->get($address);
 
         $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
         $this->bc->db->insert($aisql, ['ii', $vout_id, $address->address_id]);
       }
 
-      //}
     }
-
-    $this->trace("finished getting vout_id");
 
     return $vout_id;
   }
+
 
 
   /**
@@ -401,61 +409,46 @@ class TransactionsController extends Object
 
   public function getInfo($txid)
   {
-    $this->trace("Transaction::getInfo $txid");
+    $this->trace(__METHOD__." $txid");
     $info = $this->bc->rpc->getrawtransaction($txid, 1);
 
+    if (count($info->vin)) {
+      $vinTotal = 0;
+      foreach ($info->vin as $vin) {
+        if ($vin->txid && $vin->vout) {
 
-    try {
-      $extendedInfo = $this->bc->rpc->gettransaction($txid);
-    } catch (\Exception $e) {
-      //echo $e->getMessage();
-      $extendedInfo = false;
+          $vtx = $this->bc->rpc->getrawtransaction($vin->txid, 1);
+          $vv = $vtx->vout[$vin->vout];
+
+          sort($vv->scriptPubKey->addresses);
+          $vva = join(",", $vv->scriptPubKey->addresses);
+          $vinVouts[$vva] = $vv;
+          $vinTotal += $vv->value;
+        }
+      }
     }
 
-    //var_dump($extendedInfo);
+    if (count($info->vout)) {
+      foreach ($info->vout as $vout) {
+        $voutTotal += $vout->value;
+      }
+    }
+
+    $info->vinTotal = $vinTotal;
+    $info->voutTotal = $voutTotal;
+
+    if ($vinTotal > 0) { // if not a mined block, calc fee
+      $info->fee = $vinTotal - $voutTotal;
+    } else {
+      $info->fee = 0;
+    }
 
     if ($extendedInfo) {
-
-      //echo "got extended info\n";
-      //echo json_encode($extendedInfo);
-
-
       $info->time = $extendedInfo->time;
     }
 
     return $info;
   }
-
-
-  /**
-  *
-  * retrieves the raw transaction
-  *
-  *
-  * @param string txid transaction txid
-  * @param boolean forceUpdate
-  *
-  * <code>
-  * <?php
-  *
-  * $txRaw = Transaction::getRawInfo('foobar');
-  *
-  * ?>
-  * </code>
-   */
-
-  //todo: this and getInfo are redundant toast one
-  //public function getRawInfo($txid, $forceUpdate = false)
-  //{
-    //$this->trace("Transaction::getRawInfo $txid");
-    //if (count($this->transactions[$txid]) > 0 && $forceUpdate == false)
-    //{
-    //  return $this->transactions[$txid]['info'];
-    //} else {
-    //return $this->bc->rpc->getrawtransaction($txid, 1);
-    //}
-  //}
-
 
   /**
   *
@@ -477,7 +470,7 @@ class TransactionsController extends Object
   //todo: pointless or handy in a fork? if the latter needs to update the db if change detected
   public function vOutScan($tx, $vouts)
   {
-    $this->trace("Transaction::vOutScan {$tx->transaction_id} ".json_encode($vouts));
+    $this->trace(__METHOD__." {$tx->transaction_id} ");
     $voutCount = $this->bc->db->value(
       "select count(*) ".
         "from transactions_vouts ".
@@ -512,7 +505,7 @@ class TransactionsController extends Object
   //todo: make second argument optional, if not set get vins from bitcoind jsonrpc
   public function vInScan($tx, $vins, $depth = 0)
   {
-    $this->trace("Transaction::vInScan {$tx->transaction_id} ".json_encode($vins));
+    $this->trace(__METHOD__." {$tx->transaction_id}");
     $vinCount = $this->bc->db->value("select count(*) ".
       "from transactions_vins where transaction_id = ?",
       ['i', $tx->transaction_id]);
@@ -525,23 +518,33 @@ class TransactionsController extends Object
     }
   }
 
-
-
-
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   public function get($txid, $requery = false)
   {
-    $this->trace("Transaction::get $txid");
+    $this->trace(__METHOD__." $txid");
     $cached = $this->bc->cache->get("tx:$txid");
 
-    $this->trace($cached);
+    //$this->trace($cached);
     if ($cached !== false && $requery === false) {
 
-      $this->trace("loading transaction from cache");
+      //$this->trace("loading transaction from cache");
       //$this->trace($cached);
       $tx = new Transaction($this->bc, $cached);
-      $this->trace('got transaction fine');
+      //$this->trace('got transaction fine');
       //var_dump($tx);
-      $this->trace( $tx );
+      //$this->trace( $tx );
     } else {
       $this->trace("loading transaction from txid");
       $tx = new Transaction($this->bc, $txid);
@@ -553,6 +556,7 @@ class TransactionsController extends Object
 
   public function getvout($txid, $n)
   {
+    $this->trace(__METHOD__." $txid $n");
 
     $cached = false;
     $cached = $this->bc->cache->get("$txid:$n");
@@ -604,8 +608,7 @@ class TransactionsController extends Object
   */
 
   public function listunspents($txid) {
-    $this->trace(__METHOD__);
-    $this->trace($txid);
+    $this->trace(__METHOD__." $txid");
 
     $tx = $this->get($txid, true);
     $unspents = [];
@@ -616,7 +619,7 @@ class TransactionsController extends Object
 
       if (empty($vout->spentat)) {
 
-        $this->trace('found unspent');
+        //$this->trace('found unspent');
 
         $vsql = 'select '.
             'vintx.txid as txid, '.
@@ -636,11 +639,7 @@ class TransactionsController extends Object
           $usql = "update transactions_vouts set spentat = ? where txid = ? and n = ?";
           $uflds = ['ssi',$vin->txid, $tx->txid, $vout->n];
 
-          $this->trace($usql);
-          $this->trace($uflds);
-
           $this->bc->db->update($usql, $uflds);
-
           $updated = true;
 
         } else { //no record in database indicating it was spent, return true
@@ -648,17 +647,10 @@ class TransactionsController extends Object
           $unspents[] = $vout;
 
         }
-
       }
 
-
-      /* todo: confirm with blockchain before making logical decisions about spending */
-
+      /* todo: confirm with blockchain before making decisions about spending */
 
     }
-
   }
-
-
-
 }

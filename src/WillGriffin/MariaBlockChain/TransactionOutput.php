@@ -24,10 +24,24 @@ class TransactionOutput extends Object {
 
   public $spentat;
 
-
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   public function __construct($blockchain, $args, $n = false)
   {
     $this->bc = $blockchain;
+    $this->trace(__METHOD__);
+
     if (is_array($args) || $args instanceof \stdClass ) {
       $this->_loadArray($args);
     } else {
@@ -35,9 +49,22 @@ class TransactionOutput extends Object {
     }
   }
 
-
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   public function stdClass()
   {
+    $this->trace(__METHOD__);
     $flds = [
       "txid" => $this->txid,
       "n" => $this->n,
@@ -55,8 +82,22 @@ class TransactionOutput extends Object {
     return (object) $flds;
   }
 
+  /**
+  *
+  *
+  *
+  * @param
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+  */
   private function _loadArray($arr)
   {
+    $this->trace(__METHOD__);
 
     if (false === $arr instanceof \stdClass) {
       $arr = (object) $arr;

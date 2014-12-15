@@ -14,7 +14,22 @@ class Address extends Object {
   public $pubkey;
   public $iscompressed;
 
-  public function __construct($blockchain, $args) {
+  /**
+  *
+  *
+  *
+  *
+  * @param BlockChain $blockchain
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
+  public function __construct($blockchain, $args)
+  {
 
     parent::__construct($blockchain);
 
@@ -24,7 +39,7 @@ class Address extends Object {
       $this->_address_id = $args;
       $this->_fromID();
     } else if (is_string($args)) {
-      $this->trace("loading from string $args");
+      //$this->trace("loading from string $args");
       $this->address = $args;
       $info = $this->bc->addresses->getInfo($this->address);
       $this->_fromArray( $info );
@@ -33,8 +48,23 @@ class Address extends Object {
     }
   }
 
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
   public function __get($var)
   {
+    $this->trace(__METHOD__);
 
     switch ($var)
     {
@@ -53,17 +83,47 @@ class Address extends Object {
       break;
 
     }
-
   }
 
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
   public function __toString()
   {
-    return $this->address;
+    $this->trace(__METHOD__);
+    $this->trace($this->address);
+    return (string)$this->address;
   }
 
 
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
   public function toArray()
   {
+    $this->trace(__METHOD__);
 
     $arr = [
       "address" => $this->address,
@@ -100,7 +160,9 @@ class Address extends Object {
    */
   public function validate()
   {
-    $this->trace("validating address {$this->address}");
+    $this->trace(__METHOD__." {$this->address}");
+    //todo: move to controller / toast
+
     $addrInfo = $this->bc->rpc->validateaddress("{$this->address}");
     if ($addrInfo->isvalid)
     {
@@ -116,25 +178,72 @@ class Address extends Object {
     }
   }
 
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
   public function getID()
   {
+    $this->trace(__METHOD__." {$this->address}");
+    //todo: move to controller / toast
+
     if (!is_numeric($this->_address_id)) {
       $this->_address_id = $this->bc->addresses->getID($this->address);
     }
     return $this->_address_id;
   }
 
-  private function _fromID() {
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
+  private function _fromID()
+  {
+    $this->trace(__METHOD__." {$this->address}");
+
     $dbinfo = $this->bc->db->object("select * from addresses where address_id = ?", ['i', $this->_address_id]);
     $this->address = $dbinfo->address;
     $this->pubkey = $dbinfo->pubkey;
   }
 
-  private function _fromArray($arr) {
 
+  /**
+  *
+  *
+  *
+  *
+  * @param string
+  *
+  * <code>
+  * <?php
+  *
+  *
+  * ?>
+  * </code>
+   */
+  private function _fromArray($arr)
+  {
     $this->trace(__METHOD__);
-    $this->trace($arr);
-
 
     if (false === $arr instanceof stdClass) {
       $arr = (object) $arr;
@@ -152,8 +261,5 @@ class Address extends Object {
       $this->trace($arr);
       throw new \InvalidArgumentException('attempt to load invalid address from array');
     }
-
-
   }
-
 }

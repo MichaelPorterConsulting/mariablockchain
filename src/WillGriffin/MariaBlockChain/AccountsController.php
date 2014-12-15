@@ -4,9 +4,11 @@ namespace WillGriffin\MariaBlockChain;
 
 require_once "Account.php";
 
-class AccountsController extends Object {
+class AccountsController extends Object
+{
 
-  public function __construct($blockchain) {
+  public function __construct($blockchain)
+  {
 
     parent::__construct($blockchain);
 
@@ -28,7 +30,8 @@ class AccountsController extends Object {
    */
   public function getID($account)
   {
-    $this->trace("Looking up account $account");
+    $this->trace(__METHOD__);
+
     $account_id = $this->bc->db->value("select account_id from wallet_accounts where name = ?", ['s',$account]);
     if (!$account_id) {
       $account_id = $this->bc->db->insert("insert into wallet_accounts (name) values (?)", ['s', $account]);
@@ -53,7 +56,7 @@ class AccountsController extends Object {
     $sentSQL = $this->bc->addresses->getSentSQL($sendingAddressesSQL, $filterSQL);
     $receivedSQL = $this->bc->addresses->getReceivedSQL($receivingAddressesSQL, $filterSQL);
     $ledgerSQL = "$receivedSQL union $sentSQL";
-    $this->trace($ledgerSQL);
+
     return $this->bc->db->assocs($ledgerSQL);
   }
 
@@ -79,6 +82,7 @@ class AccountsController extends Object {
 
   protected function addressesSQL($account)
   {
+    $this->trace(__METHOD__);
 
     $sql =  "select address ".
       "from wallet_addresses ".
@@ -105,6 +109,8 @@ class AccountsController extends Object {
 
   public function getSent($account, $filters = false)
   {
+    $this->trace(__METHOD__);
+
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->bc->addresses->getSentSQL("sendingAddresses.address in ($accountSubQuery)", $filterSQL);
     return $this->bc->db->assocs($sql);
@@ -128,6 +134,8 @@ class AccountsController extends Object {
 
   public function getReceived($account, $filters = false)
   {
+    $this->trace(__METHOD__);
+
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getReceivedSQL("receivingAddresses.address in ($accountSubQuery)", $filterSQL);
     return $this->bc->db->assocs($sql);
@@ -151,6 +159,7 @@ class AccountsController extends Object {
 
   public function getReceivedTotal($account, $fiters = false)
   {
+    $this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getReceivedTotalSQL(" receivingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -178,6 +187,7 @@ class AccountsController extends Object {
 
   public function getSentTotal($account, $filters = false)
   {
+    $this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getSentTotalSQL(" sendingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -205,6 +215,8 @@ class AccountsController extends Object {
 
   public function getUnspentTotal($account, $filters = false)
   {
+    $this->trace(__METHOD__);
+
     $accountSubQuery = $this->accountSubQuerySQL($account);
     $sql = $this->unspentTotalSQL(" addresses.address in ($accountSubQuery)", $filterSQL);
     $unspentTotal = $this->bc->db->value($sql);

@@ -534,21 +534,15 @@ class TransactionsController extends Object
   public function get($txid, $requery = false)
   {
     $this->trace(__METHOD__." $txid");
-    $cached = $this->bc->cache->get("tx:$txid");
+    $cached = $this->bc->cache->get("$txid");
 
-    //$this->trace($cached);
     if ($cached !== false && $requery === false) {
-
-      //$this->trace("loading transaction from cache");
-      //$this->trace($cached);
       $tx = new Transaction($this->bc, $cached);
-      //$this->trace('got transaction fine');
-      //var_dump($tx);
-      //$this->trace( $tx );
     } else {
       $this->trace("loading transaction from txid");
       $tx = new Transaction($this->bc, $txid);
-      $this->bc->cache->set( "tx:$txid", $tx->stdClass(), false, 60 );
+
+      $this->bc->cache->set( "$txid", $tx->stdClass(), false, 60 );
     }
 
     return $tx;
@@ -560,12 +554,14 @@ class TransactionsController extends Object
 
     $cached = false;
     $cached = $this->bc->cache->get("$txid:$n");
+
     if ($cached !== false) {
       $vout = new TransactionOutput($this->bc, $cached);
     } else {
 
       $txinfo = $this->bc->transactions->getInfo($txid);
       $voutArr = $txinfo->vout[$n];
+      $voutArr->txid = $txid;
       $vout = new TransactionOutput($this->bc, $voutArr);
     }
 

@@ -7,10 +7,10 @@ require_once "Transaction.php";
 class TransactionInput  extends Object
 {
 
-  protected $_vout;
+  protected $_vout; // TransactionOutput, accessed though 'voutObj' property
 
   public $txid;
-  public $n;
+  public $vout;
 
   public $scriptSig;
   public $sequence;
@@ -60,12 +60,12 @@ class TransactionInput  extends Object
     $this->trace(__METHOD__." ".$fld);
     switch ($fld)
     {
-      case 'vout':
+      case 'voutObj':
 
-        if (is_string($this->txid) && is_numeric($this->n)){
+        if (is_string($this->txid) && is_numeric($this->vout)) {
 
           if ( !($this->_vout instanceof TransactionOutput)) {
-            $this->_vout = $this->bc->transactions->getvout($this->txid, $this->n);
+            $this->_vout = $this->bc->transactions->getvout($this->txid, $this->vout);
           }
         } else {
           $this->_vout = false;
@@ -75,11 +75,32 @@ class TransactionInput  extends Object
 
       break;
 
+      case 'n':
+        return $this->vout;
+      break;
+
+
       default:
 
       break;
     }
   }
+
+
+  public function __set($fld, $val)
+  {
+    switch ($fld) {
+
+      case 'n':
+        $this->vout = $val;
+      break;
+
+      default:
+
+      break;
+    }
+  }
+
 
   /**
   *
@@ -99,16 +120,18 @@ class TransactionInput  extends Object
     $this->trace(__METHOD__);
     $arr = [
       "txid" => $this->txid,
-      "n" => $this->n
+      "vout" => $this->vout
     ];
-
-    if ($this->_vout instanceof TransactionOutput) {
-      $arr['vout'] = $this->_vout->stdClass();
-    }
 
     return (object) $arr;
 
   }
+
+  public function getVout()
+  {
+    return $this->voutObj;
+  }
+
 
   /**
   *
@@ -139,13 +162,12 @@ class TransactionInput  extends Object
 
     if (is_numeric($arr->vout) && is_string($arr->txid)) { //todo: consider not loading until triggered by __get
       $this->trace("fetching vout from rpc");
+
       $this->n = $arr->vout;
       $this->_vout = $this->bc->transactions->getvout($arr->txid, $arr->vout);
-    } else if (is_array($arr->vout) || $arr->vout instanceof \stdClass) {
-      $this->trace("initalizing vout from array");
-      $this->_vout = new TransactionOutput($this->bc, $arr->vout);
+
     } else {
-      $this->trace("there is no vout");
+      $this->error("vin has no vout in _loadArray");
     }
   }
 

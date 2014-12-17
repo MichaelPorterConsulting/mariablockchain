@@ -37,7 +37,8 @@ class Transaction extends Object {
       $this->_vars['transaction_id'] = $tx;
     } else if (is_string($tx)) {
       $this->txid = $tx;
-      $this->_loadArray( $this->bc->transactions->getInfo($tx) );
+      $arr = $this->bc->transactions->getInfo($tx);
+      $this->_loadArray( $arr );
     } else if (is_array($tx) || $tx instanceof \stdClass) {
       $this->_loadArray($tx);
     }
@@ -123,7 +124,6 @@ class Transaction extends Object {
 
     if (is_array($arr->vin)) {
       foreach ($arr->vin as $vinArr) {
-        //echo json_encode($vinArr), "\n\n";
         $vin = new TransactionInput($this->bc, $vinArr);
         $vinTotal += $vin->vout->value;
         $this->vin[] = $vin;
@@ -132,7 +132,6 @@ class Transaction extends Object {
 
     if (is_array($arr->vout)) {
       foreach ($arr->vout as $voutArr) {
-        //echo json_encode($vout)."\n";
         $vout = new TransactionOutput($this->bc, $voutArr);
         $voutTotal += $vout->value;
         $this->vout[] = $vout;
@@ -141,9 +140,6 @@ class Transaction extends Object {
 
     $this->amount = $voutTotal;
     $this->fee = $vinTotal - $voutTotal;
-
-    $this->trace('txTime: '.$this->time);
-    $this->trace('txBlockTime: '.$this->blocktime);
   }
 
 }

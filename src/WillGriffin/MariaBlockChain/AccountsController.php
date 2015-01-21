@@ -28,13 +28,13 @@ class AccountsController extends Object
   * ?>
   * </code>
    */
-  public function getID($account)
+  public function getId($account)
   {
     $this->trace(__METHOD__);
 
-    $account_id = $this->bc->db->value("select account_id from wallet_accounts where name = ?", ['s',$account]);
+    $account_id = $this->bc->db->value("select account_id from accounts where name = ?", ['s',$account]);
     if (!$account_id) {
-      $account_id = $this->bc->db->insert("insert into wallet_accounts (name) values (?)", ['s', $account]);
+      $account_id = $this->bc->db->insert("insert into accounts (name) values (?)", ['s', $account]);
     }
     return $account_id;
   }
@@ -85,8 +85,8 @@ class AccountsController extends Object
     $this->trace(__METHOD__);
 
     $sql =  "select address ".
-      "from wallet_addresses ".
-      "where wallet_addresses.account = '".$this->bc->db->esc($account)."'";
+      "from accounts_addresses ".
+      "where accounts_addresses.account = '".$this->bc->db->esc($account)."'";
 
     return $sql;
   }

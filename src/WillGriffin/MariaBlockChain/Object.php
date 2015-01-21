@@ -51,7 +51,7 @@ class Object extends Common {
   {
     if ($this->hasHook( 'trace' )) {
       $this->emit( 'trace', $msg );
-    } else {
+    } else if ($this->bc) {
       $this->bc->trace( $msg );
     }
   }

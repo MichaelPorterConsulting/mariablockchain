@@ -87,14 +87,14 @@ class TransactionsController extends Object
   * <code>
   * <?php
   *
-  * $transaction_id = Transaction::getID('foobar');
+  * $transaction_id = Transaction::getId('foobar');
   *
   * ?>
   * </code>
    */
 
   //todo: refactor
-  public function getID($tx, $forceScan = false, $depth = 1, $forceUpdate = false)
+  public function getId($tx, $forceScan = false, $depth = 1, $forceUpdate = false)
   {
 
     $this->trace(__METHOD__." ".json_encode($tx));
@@ -255,17 +255,17 @@ class TransactionsController extends Object
   *
   * <code>
   *
-  * $vout_id = TransactionOutput::getID(1, ...);
+  * $vout_id = TransactionOutput::getId(1, ...);
   *
   * </code>
   */
-  public function getVinID($tx, $vin, $depth = 0, $followtx = true)
+  public function getVinId($tx, $vin, $depth = 0, $followtx = true)
   {
 
     $this->trace(__METHOD__." $transaction_id ".json_encode($vin));
 
     if ($vin->txid && isset($vin->vout)) {
-      $vinsID = $vin->txid."-".$vin->vout;
+      $vinsId = $vin->txid."-".$vin->vout;
 
       $vin_id = $this->bc->db->value("select vin_id ".
         "from transactions_vins ".
@@ -274,7 +274,7 @@ class TransactionsController extends Object
 
       if (!$vin_id) {
         if ($followtx) {
-          $vinvout_transaction_id = $this->getID($vin->txid, false, $depth += 1);
+          $vinvout_transaction_id = $this->getId($vin->txid, false, $depth += 1);
           $vin_vout_id = $this->bc->db->value("select vout_id ".
             "from transactions_vouts ".
             "where transaction_id = ? and n = ?",
@@ -343,20 +343,20 @@ class TransactionsController extends Object
   *
   * <code>
   *
-  * $vout_id = TransactionOutput::getID(1, ...);
+  * $vout_id = TransactionOutput::getId(1, ...);
   *
   * </code>
    */
-  public function getVoutID($tx, $vout)
+  public function getVoutId($tx, $vout)
   {
 
     $this->trace(__METHOD__." {$tx->transaction_id} {$vout->n}");
 
 
-    $voutIDSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
-    $voutIDFlds = ['ii', $tx->transaction_id, $vout->n];
+    $voutIdSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
+    $voutIdFlds = ['ii', $tx->transaction_id, $vout->n];
 
-    $vout_id = $this->bc->db->value($voutIDSQL, $voutIDFlds);
+    $vout_id = $this->bc->db->value($voutIdSQL, $voutIdFlds);
 
     if (!$vout_id) {
 
@@ -480,7 +480,7 @@ class TransactionsController extends Object
     $voutFound = count($vouts);
     if ($voutFound > $voutCount) {
       foreach ($vouts as $vout) {
-        $vout_id = $this->getVoutID($tx, $vout);
+        $vout_id = $this->getVoutId($tx, $vout);
       }
     }
   }
@@ -513,7 +513,7 @@ class TransactionsController extends Object
     $vinFound = count($vins);
     if ($vinFound > $vinCount) {
       foreach ($vins as $vin) {
-        $vin_id = $this->getVinID($tx, $vin, $depth++, ($depth <= $this->maxDepth));
+        $vin_id = $this->getVinId($tx, $vin, $depth++, ($depth <= $this->maxDepth));
       }
     }
   }
@@ -578,7 +578,7 @@ class TransactionsController extends Object
   *
   * <code>
   *
-  * $vout_id = TransactionOutput::getID(1, ...);
+  * $vout_id = TransactionOutput::getId(1, ...);
   *
   * </code>
   */
@@ -598,7 +598,7 @@ class TransactionsController extends Object
   *
   * <code>
   *
-  * $vout_id = TransactionOutput::getID(1, ...);
+  * $vout_id = TransactionOutput::getId(1, ...);
   *
   * </code>
   */

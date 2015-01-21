@@ -39,14 +39,14 @@ class BlocksController extends Object
   * ?>
   * </code>
   */
-  public function getID($block)
+  public function getId($block)
   {
     $this->trace(__METHOD__);
     if (gettype($block) === "string") {
       $block = $this->bc->rpc->getblock($block);
     }
 
-    $this->trace("blockhash::getID {$block->hash}");
+    $this->trace("blockhash::getId {$block->hash}");
     $block_id = $this->bc->db->value("select block_id ".
       "from blocks ".
       "where hash = ?",
@@ -183,7 +183,7 @@ class BlocksController extends Object
     $transaction_ids = [];
     if ($block->hash && count($block->tx)) {
       foreach ($block->tx as $txid) {
-        $transaction_ids[] = $this->bc->transactions->getID($txid, true, 0, $update);
+        $transaction_ids[] = $this->bc->transactions->getId($txid, true, 0, $update);
       }
     }
 

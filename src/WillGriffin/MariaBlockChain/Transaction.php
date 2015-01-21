@@ -54,7 +54,7 @@ class Transaction extends Object {
 
         if (!array_key_exists('transaction_id', $this->_vars)) {
           $this->bc->trace('getting transaction id');
-          $this->_vars['transaction_id'] = $this->bc->transactions->getID($this->txid);
+          $this->_vars['transaction_id'] = $this->bc->transactions->getId($this->txid);
           $this->bc->trace(json_encode($this->_vars));
         }
         return $this->_vars['transaction_id'];

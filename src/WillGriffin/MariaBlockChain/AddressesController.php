@@ -95,12 +95,12 @@ class AddressesController extends Object
   * <code>
   * <?php
   *
-  * $address_id = Address::getID('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
+  * $address_id = Address::getId('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
   *
   * ?>
   * </code>
    */
-  public function getID($address)
+  public function getId($address)
   {
     $this->trace(__METHOD__." $address");
 
@@ -117,7 +117,7 @@ class AddressesController extends Object
 
         if ($info->ismine) {
           $account = $this->bc->rpc->getaccount($address);
-          $account_id = $this->bc->accounts->getID($account);
+          $account_id = $this->bc->accounts->getId($account);
         } else {
           $account_id = 0;
         }
@@ -281,7 +281,7 @@ class AddressesController extends Object
   * drop function if exists sendingAddresses;
   * delimiter  ~
   *
-  * create function sendingAddresses (transactionID int)
+  * create function sendingAddresses (transactionId int)
   *   returns text reads sql data
   *   begin
   *     declare fini integer default 0;
@@ -294,7 +294,7 @@ class AddressesController extends Object
   *       from addresses
   *       left join transactions_vouts_addresses on addresses.address_id = transactions_vouts_addresses.address_id
   *       left join transactions_vins on transactions_vouts_addresses.vout_id = transactions_vins.vout_id
-  *       where transactions_vins.transaction_id = transactionID;
+  *       where transactions_vins.transaction_id = transactionId;
   *
   *     declare continue handler
   *         for not found set fini = 1;
@@ -570,10 +570,10 @@ class AddressesController extends Object
   * </code>
    */
 
-  public function getUnspentTotalSQL($addressSQL)
+  public function getUnspentTotalSQL($addressSQL, $filterSQL)
   {
     $this->trace(__METHOD__);
-    //todo: benchmark id based '$address_id = $this->bc->addresses->getID($address);'
+    //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
 
     $sql = "select  ".
       "sum(vouts.value) ".
@@ -582,7 +582,7 @@ class AddressesController extends Object
       "inner join transactions_vouts as vouts on voutsAddresses.vout_id = vouts.vout_id ".
       "inner join transactions on vouts.transaction_id = transactions.transaction_id ".
     "where vouts.spentat is null and ".
-    "($addressSQL)";
+    "($addressSQL) $filterSQL";
 
     return $sql;
   }
@@ -607,7 +607,7 @@ class AddressesController extends Object
   public function getUnspentTotal($address, $filters = false)
   {
     $this->trace(__METHOD__);
-    //todo: benchmark id based '$address_id = $this->bc->addresses->getID($address);'
+    //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
 
     $filterSQL = $this->getFilterSQL( $filters );
 

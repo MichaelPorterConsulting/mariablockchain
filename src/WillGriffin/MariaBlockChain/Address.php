@@ -37,7 +37,7 @@ class Address extends Object {
 
     if (is_numeric($args)) {
       $this->_address_id = $args;
-      $this->_fromID();
+      $this->_fromId();
     } else if (is_string($args)) {
       //$this->trace("loading from string $args");
       $this->address = $args;
@@ -71,7 +71,7 @@ class Address extends Object {
       case 'address_id':
 
         if (!is_numeric($this->_address_id)) {
-          $this->_address_id = $this->bc->addresses->getID($this->address);
+          $this->_address_id = $this->bc->addresses->getId($this->address);
           //$this->bc->log("got address_id fine");
         }
         return $this->_address_id;
@@ -192,13 +192,13 @@ class Address extends Object {
   * ?>
   * </code>
    */
-  public function getID()
+  public function getId()
   {
     $this->trace(__METHOD__." {$this->address}");
     //todo: move to controller / toast
 
     if (!is_numeric($this->_address_id)) {
-      $this->_address_id = $this->bc->addresses->getID($this->address);
+      $this->_address_id = $this->bc->addresses->getId($this->address);
     }
     return $this->_address_id;
   }
@@ -217,7 +217,7 @@ class Address extends Object {
   * ?>
   * </code>
    */
-  private function _fromID()
+  private function _fromId()
   {
     $this->trace(__METHOD__." {$this->address}");
 

@@ -83,7 +83,7 @@ class Block extends Object {
 
         if (!array_key_exists('block_id', $this->_vars)) {
           $this->bc->trace('getting block id');
-          $this->_vars['block_id'] = $this->bc->blocks->getID($this->hash);
+          $this->_vars['block_id'] = $this->bc->blocks->getId($this->hash);
           $this->bc->trace(json_encode($this->_vars));
         }
         return $this->_vars['block_id'];

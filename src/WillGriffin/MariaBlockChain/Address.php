@@ -6,6 +6,7 @@ require_once "BlockChain.php";
 class Address extends Object {
 
   protected $_address_id;
+  protected $_cachePrefix;
 
   public $address;
   public $isvalid;
@@ -33,13 +34,13 @@ class Address extends Object {
 
     parent::__construct($blockchain);
 
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     if (is_numeric($args)) {
       $this->_address_id = $args;
       $this->_fromId();
     } else if (is_string($args)) {
-      //$this->trace("loading from string $args");
+      ////$this->trace("loading from string $args");
       $this->address = $args;
       $info = $this->bc->addresses->getInfo($this->address);
       $this->_fromArray( $info );
@@ -64,7 +65,7 @@ class Address extends Object {
    */
   public function __get($var)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     switch ($var)
     {
@@ -101,8 +102,7 @@ class Address extends Object {
    */
   public function __toString()
   {
-    $this->trace(__METHOD__);
-    $this->trace($this->address);
+    //$this->trace(__METHOD__);
     return (string)$this->address;
   }
 
@@ -123,7 +123,7 @@ class Address extends Object {
    */
   public function toArray()
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $arr = [
       "address" => $this->address,
@@ -160,7 +160,7 @@ class Address extends Object {
    */
   public function validate()
   {
-    $this->trace(__METHOD__." {$this->address}");
+    //$this->trace(__METHOD__." {$this->address}");
     //todo: move to controller / toast
 
     $addrInfo = $this->bc->rpc->validateaddress("{$this->address}");
@@ -194,7 +194,7 @@ class Address extends Object {
    */
   public function getId()
   {
-    $this->trace(__METHOD__." {$this->address}");
+    //$this->trace(__METHOD__." {$this->address}");
     //todo: move to controller / toast
 
     if (!is_numeric($this->_address_id)) {
@@ -219,7 +219,7 @@ class Address extends Object {
    */
   private function _fromId()
   {
-    $this->trace(__METHOD__." {$this->address}");
+    //$this->trace(__METHOD__." {$this->address}");
 
     $dbinfo = $this->bc->db->object("select * from addresses where address_id = ?", ['i', $this->_address_id]);
     $this->address = $dbinfo->address;
@@ -243,7 +243,7 @@ class Address extends Object {
    */
   private function _fromArray($arr)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     if (false === $arr instanceof stdClass) {
       $arr = (object) $arr;
@@ -259,6 +259,7 @@ class Address extends Object {
       }
     } else {
       $this->trace($arr);
+      debug_print_backtrace();
       throw new \InvalidArgumentException('attempt to load invalid address from array');
     }
   }

@@ -9,9 +9,7 @@ class AccountsController extends Object
 
   public function __construct($blockchain)
   {
-
     parent::__construct($blockchain);
-
   }
 
   /**
@@ -30,7 +28,7 @@ class AccountsController extends Object
    */
   public function getId($account)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $account_id = $this->bc->db->value("select account_id from accounts where name = ?", ['s',$account]);
     if (!$account_id) {
@@ -41,7 +39,7 @@ class AccountsController extends Object
 
   public function getLedger($account, $filters)
   {
-    $this->trace(__METHOD__." ".$account);
+    //$this->trace(__METHOD__." ".$account);
 
     if (empty($account)) {
       echo "invalid account";
@@ -82,7 +80,7 @@ class AccountsController extends Object
 
   protected function addressesSQL($account)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $sql =  "select address ".
       "from accounts_addresses ".
@@ -109,7 +107,7 @@ class AccountsController extends Object
 
   public function getSent($account, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->bc->addresses->getSentSQL("sendingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -134,7 +132,7 @@ class AccountsController extends Object
 
   public function getReceived($account, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getReceivedSQL("receivingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -159,7 +157,7 @@ class AccountsController extends Object
 
   public function getReceivedTotal($account, $fiters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getReceivedTotalSQL(" receivingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -187,7 +185,7 @@ class AccountsController extends Object
 
   public function getSentTotal($account, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getSentTotalSQL(" sendingAddresses.address in ($accountSubQuery)", $filterSQL);
@@ -215,7 +213,7 @@ class AccountsController extends Object
 
   public function getUnspentTotal($account, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $accountSubQuery = $this->accountSubQuerySQL($account);
     $sql = $this->unspentTotalSQL(" addresses.address in ($accountSubQuery)", $filterSQL);

@@ -21,6 +21,8 @@ class BlockChain extends Common {
   public $accounts;
   public $blocks;
 
+  public $tracelog;
+
   /**
   *
   *
@@ -34,8 +36,14 @@ class BlockChain extends Common {
   * ?>
   * </code>
   */
-  public function __construct( $rpc, $db, $cache )
+  public function __construct( $rpc, $db, $cache, $options = [] )
   {
+
+    if (isset($options['tracelog'])) {
+      $this->tracelog = $options['tracelog'];
+    } else {
+      $this->tracelog = false;
+    }
 
     $this->db = $db;
     $this->rpc = $rpc;
@@ -45,6 +53,8 @@ class BlockChain extends Common {
     $this->addresses = new AddressesController( $this );
     $this->accounts = new AccountsController( $this );
     $this->blocks = new BlocksController( $this );
+
+
 
   }
 
@@ -63,14 +73,16 @@ class BlockChain extends Common {
   */
   public function trace( $msg )
   {
-    if ($this->hasHook('trace')) {
-      $this->emit( 'trace', $msg );
-    } else {
-      if (gettype($msg) !== "string") {
-        $msg = json_encode($msg);
-      }
+    if ($this->tracelog === true) {
+      if ($this->hasHook('trace')) {
+        $this->emit( 'trace', $msg );
+      } else {
+        if (gettype($msg) !== "string") {
+          $msg = json_encode($msg);
+        }
 
-      echo $msg."\n";
+        echo $msg."\n";
+      }
     }
   }
 
@@ -90,10 +102,10 @@ class BlockChain extends Common {
   public function error( $msg )
   {
     if ($this->hasHook('error')) {
-      $this->emit( 'error', $msg );
-    } else {
-      echo $msg."\n";
+      $this->emit('error', $msg);
       die;
+    } else {
+      throw new \Exception($msg);
     }
   }
 }

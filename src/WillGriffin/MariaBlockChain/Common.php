@@ -26,8 +26,7 @@ class Common {
         if (is_callable($hook)) {
           call_user_func($hook, $args);
         } else {
-          $this->error("hook is not callable ($hook)");
-          error_log($msg);
+          throw new \Execption("hook defined is not callable $event");
         }
       }
     }
@@ -48,7 +47,7 @@ class Common {
   */
   public function hasHook($event)
   {
-    if (is_array($this->_hooks[$event]) && count($this->_hooks[$event] > 0)) {
+    if (is_array($this->_hooks) && array_key_exists($event, $this->_hooks)) {
       return true;
     } else {
       return false;

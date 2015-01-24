@@ -6,7 +6,7 @@ require_once "Address.php";
 
 class AddressesController extends Object
 {
-
+  protected $_cachePrefix;
   /**
   *
   *
@@ -23,7 +23,12 @@ class AddressesController extends Object
    */
   public function __construct($blockchain)
   {
+
+    if (!isset($this->_cachePrefix))
+      $this->_cachePrefix = "";
+
     parent::__construct($blockchain);
+
   }
 
   /**
@@ -43,7 +48,7 @@ class AddressesController extends Object
    */
   public function validate($address)
   {
-    $this->trace(__METHOD__." $address");
+    //$this->trace(__METHOD__." $address");
 
     $addrInfo = $this->bc->rpc->validateaddress($this->address);
     if ($addrInfo->isvalid) {
@@ -77,10 +82,10 @@ class AddressesController extends Object
   */
   public function getInfo($address)
   {
-    $this->trace(__METHOD__." $address");
+    //$this->trace(__METHOD__." $address");
 
     $addrInfo = $this->bc->rpc->validateaddress($address);
-    $this->trace($addrInfo);
+    //$this->trace($addrInfo);
 
     return $addrInfo;
   }
@@ -100,9 +105,10 @@ class AddressesController extends Object
   * ?>
   * </code>
    */
-  public function getId($address)
+
+  public function getAddressId($address)
   {
-    $this->trace(__METHOD__." $address");
+    //$this->trace(__METHOD__." $address");
 
     $address_id = $this->bc->db->value("select address_id ".
       "from addresses ".
@@ -139,7 +145,7 @@ class AddressesController extends Object
             intval($info->iscompressed)]);
 
       } else {
-        $this->trace("invalid address");
+        //$this->trace("invalid address");
         echo "invalid address";
         die;
       }
@@ -147,6 +153,29 @@ class AddressesController extends Object
     }
 
     return $address_id;
+  }
+
+
+
+
+  /**
+  *
+  * generic named alias to be overwritten in extending classes
+  *
+  *
+  * @param string address related address to fetch sent ledger sql for
+  *
+  * <code>
+  * <?php
+  *
+  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  *
+  * ?>
+  * </code>
+  */
+
+  public function getId($address) {
+    return $this->getAddressId($address);
   }
 
   /**
@@ -165,25 +194,27 @@ class AddressesController extends Object
   * </code>
   */
 
-  public function get($address)
+  public function get($address, $refresh = false)
   {
-    $this->trace( __METHOD__." ".$address );
-
+    //$this->trace( __METHOD__." ".$address );
     if ($address) {
       $cached = $this->bc->cache->get($address);
-      if ($cached !== false) {
-        //$this->trace( "getting from cache" );
+      if ($cached !== false && $refresh === false) {
         $address = new Address($this->bc, $cached);
       } else {
-        //$this->trace( "getting address" );
         $address = new Address($this->bc, $address);
-        $this->bc->cache->set( "$address", $address->toArray(), false, 60 );
+        $this->updateCached($address, $address->toArray());
       }
 
       return $address;
     }
   }
 
+
+  public function updateCached($what, $data)
+  {
+    $this->currency->cache->set( $this->_cachePrefix.$what, $data, false, 60 );
+  }
 
 
 
@@ -205,7 +236,7 @@ class AddressesController extends Object
 
   public function getSentSQL($addressSQL, $filterSQL = "")
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $sentSQL = "select ".
         "distinct receivingVouts.vout_id as vout_id, ".
@@ -252,7 +283,7 @@ class AddressesController extends Object
 
   public function getSent($sendingAddress, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
     $sendingAddress = $this->bc->db->esc($sendingAddress);
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getSentSQL("sendingAddresses.address = '$sendingAddress'", $filterSQL);
@@ -321,7 +352,7 @@ class AddressesController extends Object
 
   public function getReceivedSQL($addressSQL, $filterSQL = "")
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
     //todo: optimize joins / inputs... experiment with 'change' more
     //todo: time in db relates to when the database record was added, fiddle with other options
 
@@ -345,7 +376,7 @@ class AddressesController extends Object
         "and transactions_vouts.value is not null ".
         $filterSQL;
 
-    //$this->trace($receivedSQL);
+    ////$this->trace($receivedSQL);
     return $receivedSQL;
 
   }
@@ -369,7 +400,7 @@ class AddressesController extends Object
 
   public function getReceived($receivingAddress, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $receivingAddress = $this->bc->db->esc($receivingAddress);
     $filterSQL = $this->getFilterSQL($filters);
@@ -396,7 +427,7 @@ class AddressesController extends Object
 
   public function getLedger($address, $filters = false)
   {
-    $this->trace(__METHOD__." $address ".json_encode($filters));
+    //$this->trace(__METHOD__." $address ".json_encode($filters));
 
     if (is_string((string)$address)) {
 
@@ -406,7 +437,7 @@ class AddressesController extends Object
       $sentSQL = $this->getSentSQL("sendingAddresses.address = '".$this->db->esc($address)."' ", $filterSQL);
 
       $ledgerSQL = "$receivedSQL union $sentSQL";
-      $this->trace($ledgerSQL);
+      //$this->trace($ledgerSQL);
 
       return $this->bc->db->assocs($ledgerSQL);
 
@@ -436,7 +467,7 @@ class AddressesController extends Object
    */
   public function getReceivedTotalSQL($addressSQL, $filterSQL)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $sql = "select  ".
       "sum(receivingVouts.value), ".
@@ -454,7 +485,7 @@ class AddressesController extends Object
       "and sendingVoutsAddresses.address_id != receivingVoutsAddresses.address_id ".
       "$filterSQL ".
       "group by receivingVoutsAddresses.address_id";
-    //$this->trace($sql);
+    ////$this->trace($sql);
 
     return $sql;
   }
@@ -479,7 +510,7 @@ class AddressesController extends Object
 
   public function getReceivedTotal($receivingAddress, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
     $receivingAddress = $this->bc->db->esc($receivingAddress);
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getReceivedTotalSQL("receivingAddresses.address = '$receivingAddress' ", $filterSQL);
@@ -506,7 +537,7 @@ class AddressesController extends Object
 
   public function getSentTotalSQL($addressSQL, $filterSQL = "")
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
       $sql = "select sum(total) from (".
           "select sum(receivingVouts.value) as total ".
@@ -522,7 +553,7 @@ class AddressesController extends Object
             " group by transactions_vouts_addresses.vout_id ".
         ") as totals";
 
-    $this->trace($sql);
+    //$this->trace($sql);
     return $sql;
 
   }
@@ -545,7 +576,7 @@ class AddressesController extends Object
 
   public function getSentTotal($sendingAddress, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getSentTotalSQL("sendingAddresses.address = ? ", $filterSQL);
@@ -572,7 +603,7 @@ class AddressesController extends Object
 
   public function getUnspentTotalSQL($addressSQL, $filterSQL)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
     //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
 
     $sql = "select  ".
@@ -606,12 +637,12 @@ class AddressesController extends Object
 
   public function getUnspentTotal($address, $filters = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
     //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
 
     $filterSQL = $this->getFilterSQL( $filters );
 
-    $this->trace("getUnspentTotal sql:");
+    //$this->trace("getUnspentTotal sql:");
     $sql = $this->unspentTotalSQL("addresses.address = '$address'", $filterSQL);
     $receivedTotal = $this->bc->db->value($sql);
 
@@ -631,7 +662,7 @@ class AddressesController extends Object
   */
   public function prepDate($dateStr, $setTime = false)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     if (!is_numeric($dateStr)) {
       $dateInt = strtotime($dateStr);
@@ -676,7 +707,7 @@ class AddressesController extends Object
   */
   public function getFilterSQL($filters)
   {
-    $this->trace(__METHOD__);
+    //$this->trace(__METHOD__);
 
     $filterSQL = "";
     if (count($filters) > 0) {

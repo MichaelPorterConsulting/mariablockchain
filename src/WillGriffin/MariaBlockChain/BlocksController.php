@@ -84,36 +84,49 @@ class BlocksController extends Object
     }
 
     if ($block->hash) {
-      $block_id = $this->bc->db->insert("insert into blocks ".
-        "(hash, ".
-          "confirmations, ".
-          "size, ".
-          "height, ".
-          "version, ".
-          "merkleroot, ".
-          "time, ".
-          "nonce, ".
-          "bits, ".
-          "difficulty, ".
-          "previousblockhash, ".
-          "nextblockhash, ".
-          "last_update ".
-        ") values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ['siiidsiisdsss',
-          $block->hash,               //s
-          $block->confirmations,      //i
-          $block->size,               //i
-          $block->height,             //i
-          $block->version,            //d
-          $block->merkleroot,         //s
-          $block->time,               //i
-          $block->nonce,              //i
-          $block->bits,               //s
-          $block->difficulty,         //d
-          $block->previousblockhash,  //s
-          $block->nextblockhash,      //s
-          $block->last_update         //s
-        ]);
+
+      echo "INSERTING BLOCK\n\n";
+
+      $bsql = "insert into blocks ".
+        "(time, ".
+        "hash, ".
+        "size, ".
+        "height, ".
+        "version, ".
+        "merkleroot, ".
+        "nonce, ".
+        "bits, ".
+        "difficulty, ".
+        "previousblockhash, ".
+        "nextblockhash, ".
+        "last_updated ".
+      ") values (from_unixtime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())";
+
+
+      $bvals = ['isiidsisdss',
+        $block->time,               //i
+        $block->hash,               //s
+        $block->size,               //i
+        $block->height,             //i
+        $block->version,            //d
+        $block->merkleroot,         //s
+        $block->nonce,              //i
+        $block->bits,               //s
+        $block->difficulty,         //d
+        $block->previousblockhash,  //s
+        $block->nextblockhash       //s
+      ];
+
+
+      echo $bsql, "\n";
+
+      echo json_encode($bvals), "\n";
+
+
+
+      $block_id = $this->bc->db->insert($bsql, $bvals);
+
+      echo "block_id: ",$block_id,"\n";
 
       if ($insertTransactions === true) {
 

@@ -119,7 +119,8 @@ class Transaction extends Object {
 
     $flds = ["txid", "amount", "confirmations", "blockhash", "blocktime", "time"];
     foreach ($flds as $fld) {
-      $this->{$fld} = $arr->{$fld};
+      if (isset($arr->{$fld}))
+        $this->{$fld} = $arr->{$fld};
     }
 
     if (is_array($arr->vin)) {

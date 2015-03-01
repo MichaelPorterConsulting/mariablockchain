@@ -124,7 +124,6 @@ class TransactionInput  extends Object
     ];
 
     return (object) $arr;
-
   }
 
   public function getVout()
@@ -170,6 +169,4 @@ class TransactionInput  extends Object
       $this->error("vin has no vout in _loadArray");
     }
   }
-
 }
-

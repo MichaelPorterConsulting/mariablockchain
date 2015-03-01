@@ -66,7 +66,9 @@ class TransactionsController extends Object
     }
 
     if (!$info->time) {
+
       $info->time = time();
+
     }
 
     return $info;

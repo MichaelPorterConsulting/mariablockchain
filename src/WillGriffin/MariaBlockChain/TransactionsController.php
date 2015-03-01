@@ -30,9 +30,7 @@ class TransactionsController extends Object
   */
   public function __construct($blockchain)
   {
-
     parent::__construct($blockchain);
-
   }
 
   /**
@@ -100,142 +98,159 @@ class TransactionsController extends Object
   {
 
     $this->trace(__METHOD__." ".json_encode($tx));
-    $updated = false;
+    $updated = false; //if tx has been updated,
+    $isFresh = false; //if tx has just been inserted don't bother updating
     $timestarted = time();
-
     $info = false;
 
     if ($depth <= $this->maxDepth)
     {
 
-      if (is_string($tx)) { //if txstr is a raw transaction
+      if (is_string($tx)) {
         $txid = $tx;
       } else if ($tx instanceof \stdClass && is_string($tx->txid)) {
+        //for those days when the wallet server wants to send you a raw transaction
+        //your local bitcoind node might not know about yet
         $txid = $tx->txid;
         $info = $tx;
       } else {
-        $this->trace("error: invalid transaction");
-        $this->error("invalid transaction");
-        die;
+        throw new \InvalidArgumentException("can't read $tx");
       }
 
       $idsql = 'select transaction_id from transactions where txid = ?';
       $transaction_id = $this->bc->db->value($idsql, ['s', $txid]);
 
-      if ( !is_numeric($transaction_id) ) {
+      if (!is_numeric($transaction_id)) {
 
-        if (!$info) {
-          $info = $this->getInfo( $txid );
-          $this->trace($info);
+        //$info = (is_object($info)) ? $info : ;
+        if (!is_object($info)) {
+          $this->trace("no info adding");
+          try {
+            $info = $this->bc->transactions->getInfo($txid);
+            $this->trace($info);
+          } catch (\Exception $e) {
+            $this->trace('no info availible');
+            return false;
+          }
+          if (!$info) {
+            return $info;
+          }
+
+        }
+
+
+        $block = (isset($info->blockhash) && !empty($info->blockhash)) ? $this->bc->blocks->get($info->blockhash) : false;
+
+        if (!$block) {
+          $block = (object)[
+            'hash' => "",
+            'block_id' => 0,
+            'time' => 0
+          ];
         }
 
         $insertTransactionSQL = 'insert into transactions '.
-          '(confirmations, '.
-            'blockhash, '.
-            'blocktime, '.
+          '(blockhash, '.
+            'block_id, '.
             'txid, '.
             'time, '.
             'inwallet'.
-          ') values (?, ?, from_unixtime(?), ?, from_unixtime(?), ?)';
+          ') values (?, ?, ?, from_unixtime(?), ?)';
 
-        if (!$info->time && !$info->blocktime) {
-          $info->time = time();
+        $insertTransactionFlds = ['sisii',
+          $block->hash,
+          $block->block_id,
+          $info->txid,
+          intval($info->time),
+          intval($info->inwallet)
+        ];
+
+        if (count($info->vout) > 0) {
+          $transaction_id = $this->bc->db->insert( $insertTransactionSQL, $insertTransactionFlds );
+        } else {
+          $this->trace($info);
+          throw new \Exception("Transactions must have at least one output\n".json_encode($info));
         }
 
-        $insertTransactionFlds = ['isisii',
-            intval($info->confirmations),
-            $info->blockhash,
-            intval($info->blocktime),
-            $info->txid,
-            intval($info->time),
-            intval($info->inwallet)
-          ];
-
-
-        $transaction_id = $this->bc->db->insert( $insertTransactionSQL, $insertTransactionFlds );
-
         if ($transaction_id > 0) {
-          if (count($info->vin)) //todo: how exactly could this not be? what's the point of this 'if', worth throwing error ? maybe a mined transaction has no inputs?
+
+          if (count($info->vin))
             $this->vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $depth);
 
-          if (count($info->vout))//todo: ^^
+          if (count($info->vout))
             $this->vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
 
         } else {
-          $this->trace("insert failed ($transaction_id)");
-          $this->trace( $insertTransactionSQL );
-          $this->trace( json_encode($insertTransactionFlds) );
+          //shouldn't be failing at this point
+          throw new \Exception("Insert failed: $insertTransactionSQL");
         }
+
+        $isFresh = true;
 
       }
 
-      if ($forceUpdate) {
+      if ($forceUpdate && !$fresh) {
         if ($info === false) {
-          $info = $this->getInfo( $txid );
-        }
-
-        $dbinfo = $this->bc->db->object("select ".
-          "confirmations, ".
-          "blockhash, ".
-          "txid, ".
-          "unix_timestamp(blocktime) as blocktime, ".
-          "unix_timestamp(time) as time ".
-          "from transactions where transaction_id = ?",
-          ['i', $transaction_id]);
-
-        $infoFields = [
-          'confirmations' => 'i',
-          'blockhash' => 's',
-          'blocktime' => 'i',
-          'time' => 'i',
-          'inwallet' => 'i'];
-
-        foreach ($infoFields as $fld => $fldtype) {
-          if (!empty($info->{$fld}) && $info->{$fld} != $this->transactions[$txid][$fld]) {
-
-            if (in_array($fld, ['time','blocktime'])) {
-              $updateFields .= "$fld = from_unixtime(?),";
-            } else {
-              $updateFields .= "$fld = ?,";
-            }
-
-            $updateValues[] = $info->{$fld};
-            $updateTypes .=  $fldtype;
-
+          try {
+            $info = $this->getInfo( $txid );
+          } catch (\Exception $e) {
+            $info = false;
           }
         }
 
-        if (!empty($updateFields)) {
+        $dbinfo = $this->bc->db->object(
+          "select ".
+            "block_id, ".
+            "blockhash, ".
+            "txid, ".
+            "unix_timestamp(time) as time ".
+          "from transactions where transaction_id = ?",
+          ['i', $transaction_id]);
 
-          $updateFields = rtrim($updateFields,' ,');
-          $updateValues[] = $transaction_id;
-          $updateTypes .= 'i';
+        echo json_encode($dbinfo), "\n\n";
+        echo json_encode($info), "\n\n";
 
-          array_unshift( $updateValues, $updateTypes );
-          $usql = "update transactions set $updateFields where transaction_id = ?";
-          $this->bc->db->update( $usql, $updateValues );
-          $updated = true;
+
+        //pretty much the only bit of a transaction that will be update is once
+        //confirmed the block it shows up in
+        if (is_object($info) && is_object($dbinfo) && $info->blockhash !== $dbinfo->blockhash) {
+
+          if (!isset($block) && !empty($info->blockhash)) {
+            $block = $this->bc->blocks->get($info->blockhash);
+          }
+
+          if (is_object($block) && is_numeric($block->block_id)) {
+            $usql = "update transactions set block_id = ?, blockhash = ?, last_updated = now() where transaction_id = ?";
+            $this->bc->db->update( $usql, ['isi', $block->block_id, $block->hash, $transaction_id] );
+            $updated = true;
+          }
+
+        } else {
+          if ($dbinfo && !$dbinfo->block_id) { //if unconfirmed prune with prejudice, otherwise leave to block control
+            echo "bad transaction, pruning..\n";
+            $this->prune($txid);
+            $transactions_id = false;
+          }
         }
-
       }
 
 
       //todo: still worthwhile ?
-      if ($forceScan) {
-
-        if (count($info->vin)) {
-          $this->vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $depth);
-        }
-
-        if (count($info->vout)) {
-          $this->vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
-        }
-
-        $updated = true;
-      }
+      // if ($forceScan) {
+      //
+      //   if (count($info->vin)) {
+      //     $this->vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $depth);
+      //   }
+      //
+      //   if (count($info->vout)) {
+      //     $this->vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
+      //   }
+      //
+      //   $updated = true;
+      // }
 
       if ($updated) {
-        $this->emit("updated", $txid);
+        $this->emit("updated", $tx);
       }
 
       return $transaction_id;
@@ -243,6 +258,8 @@ class TransactionsController extends Object
       return false;
     }
   }
+
+
 
 
   /**
@@ -369,7 +386,7 @@ class TransactionsController extends Object
       $voflds = ['isdissis',
         $tx->transaction_id,
         $tx->txid,
-        $vout->value,
+        round($vout->value * 1e8) / 1e8,
         $vout->n,
         $vout->scriptPubKey->asm,
         $vout->scriptPubKey->hex,
@@ -398,7 +415,8 @@ class TransactionsController extends Object
   *
   *
   * @param string txid transactions txid
-  * @param boolean forceScan
+  *
+  * @return $info stdClass or false
   *
   * <code>
   * <?php
@@ -412,44 +430,46 @@ class TransactionsController extends Object
   public function getInfo($txid)
   {
     $this->trace(__METHOD__." $txid");
-    $info = $this->bc->rpc->getrawtransaction($txid, 1);
 
-    if (count($info->vin)) {
-      $vinTotal = 0;
-      foreach ($info->vin as $vin) {
-        if ($vin->txid && $vin->vout) {
+    try {
+      $info = $this->bc->rpc->getrawtransaction($txid, 1);
 
-          $vtx = $this->bc->rpc->getrawtransaction($vin->txid, 1);
-          $vv = $vtx->vout[$vin->vout];
+      if (count($info->vin)) {
+        $vinTotal = 0;
+        foreach ($info->vin as $vin) {
+          if ($vin->txid && $vin->vout) {
 
-          sort($vv->scriptPubKey->addresses);
-          $vva = join(",", $vv->scriptPubKey->addresses);
-          $vinVouts[$vva] = $vv;
-          $vinTotal += $vv->value;
+            $vtx = $this->bc->rpc->getrawtransaction($vin->txid, 1);
+            $vv = $vtx->vout[$vin->vout];
+
+            sort($vv->scriptPubKey->addresses);
+            $vva = join(",", $vv->scriptPubKey->addresses);
+            $vinVouts[$vva] = $vv;
+            $vinTotal += $vv->value;
+          }
         }
       }
-    }
 
-    if (count($info->vout)) {
-      foreach ($info->vout as $vout) {
-        $voutTotal += $vout->value;
+      if (count($info->vout)) {
+        foreach ($info->vout as $vout) {
+          $voutTotal += $vout->value;
+        }
       }
+
+      $info->vinTotal = round($vinTotal * 1e8) / 1e8;
+      $info->voutTotal = round($voutTotal * 1e8) / 1e8;
+
+      if ($vinTotal > 0) { // if not a mined block, calc fee
+        $info->fee = round(($vinTotal - $voutTotal) * 1e8) / 1e8;
+      } else {
+        $info->fee = 0;
+      }
+
+      return $info;
+
+    } catch (\Exception $e) {
+      return false;
     }
-
-    $info->vinTotal = $vinTotal;
-    $info->voutTotal = $voutTotal;
-
-    if ($vinTotal > 0) { // if not a mined block, calc fee
-      $info->fee = $vinTotal - $voutTotal;
-    } else {
-      $info->fee = 0;
-    }
-
-    if ($extendedInfo) {
-      $info->time = $extendedInfo->time;
-    }
-
-    return $info;
   }
 
   /**
@@ -571,23 +591,38 @@ class TransactionsController extends Object
   }
 
 
-
   /**
   *
-  * roll a transaction back, for those that end up in a shitty fork
+  * prunes a transaction and all it's descendants
   *
-  * @param integer $txid the transaction to roll back
+  * in the event we've cached a raw transaction from the wallet server that has
+  * since proven to be invalid, clean it out of the database. also used to clean
+  * up after a fork
   *
-  * <code>
-  *
-  * $vout_id = TransactionOutput::getId(1, ...);
-  *
-  * </code>
   */
+  public function prune($txid)
+  {
+    $transaction_id = $this->bc->db->value("select transaction_id from transactions where  txid = ?", ['s', $txid]);
+    if ($transaction_id) {
 
-  public function rollback($txid) {
+      $usql = "update transactions_vouts set spentat = null where txid = ?";
+      $uvals = ['s', $txid];
+      $this->bc->db->update($usql, $uvals);
 
-    $this->bc->db->update("update transactions_vouts set spentat = null where txid = ?", ['s', $txid]);
+      $inputSql = "select distinct spentat from transactions_vouts where transaction_id = ?";
+      $inputVals = ['i', $transaction_id];
+      $inputTxs = $this->bc->db->column($inputSql, 0, $inputVals);
+
+      if (count($inputTxs) > 0) foreach ($inputTxs as $inputTx) {
+        if ($inputTx)
+          $this->prune($inputTx);
+      }
+
+      $this->bc->db->update("delete from transactions where transaction_id = ?", ['i', $transaction_id]);
+      $this->bc->db->update("delete from transactions_vouts where transaction_id = ?", ['i', $transaction_id]);
+      $this->bc->db->update("delete from transactions_vins where transaction_id = ?", ['i', $transaction_id]);
+
+    }
   }
 
 

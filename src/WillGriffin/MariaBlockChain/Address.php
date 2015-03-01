@@ -258,8 +258,6 @@ class Address extends Object {
         $this->_address_id = $arr->address_id;
       }
     } else {
-      $this->trace($arr);
-      debug_print_backtrace();
       throw new \InvalidArgumentException('attempt to load invalid address from array');
     }
   }

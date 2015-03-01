@@ -148,25 +148,26 @@ class TransactionInput  extends Object
   private function _loadArray($arr)
   {
     $this->trace(__METHOD__);
-
+    $this->trace($arr);
     if (false === $arr instanceof \stdClass) {
       $arr = (object) $arr;
     }
 
     foreach (["scriptSig", "txid", "sequence","coinbase"] as $fld) {
-      if ($arr->{$fld}) {
+      if (isset($arr->{$fld})) {
         $this->{$fld} = $arr->{$fld};
       }
     }
 
-    if (is_numeric($arr->vout) && is_string($arr->txid)) { //todo: consider not loading until triggered by __get
+    if (isset($arr->vout) && is_numeric($arr->vout) && is_string($arr->txid)) {
       $this->trace("fetching vout from rpc");
-
       $this->n = $arr->vout;
       $this->_vout = $this->bc->transactions->getvout($arr->txid, $arr->vout);
-
+    } else if (isset($arr->coinbase) && !empty($arr->coinbase)) {
+      $this->trace("generation transaction");
+      $this->trace($arr);
     } else {
-      $this->error("vin has no vout in _loadArray");
+      //$this->error("vin has no vout in _loadArray");
     }
   }
 }

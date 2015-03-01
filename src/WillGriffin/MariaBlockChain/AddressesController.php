@@ -198,12 +198,12 @@ class AddressesController extends Object
   {
     //$this->trace( __METHOD__." ".$address );
     if ($address) {
-      $cached = $this->bc->cache->get($address);
+      $cached = $this->bc->cache->get((string)$address);
       if ($cached !== false && $refresh === false) {
         $address = new Address($this->bc, $cached);
       } else {
-        $address = new Address($this->bc, $address);
-        $this->updateCached($address, $address->toArray());
+        $address = new Address($this->bc, (string)$address);
+        $this->updateCached((string)$address, $address->toArray());
       }
 
       return $address;
@@ -214,6 +214,11 @@ class AddressesController extends Object
   public function updateCached($what, $data)
   {
     $this->currency->cache->set( $this->_cachePrefix.$what, $data, false, 60 );
+  }
+
+  public function wipeCached($what)
+  {
+    $this->currency->cache->delete( $this->_cachePrefix.$what );
   }
 
 
@@ -427,26 +432,18 @@ class AddressesController extends Object
 
   public function getLedger($address, $filters = false)
   {
-    //$this->trace(__METHOD__." $address ".json_encode($filters));
-
     if (is_string((string)$address)) {
 
-      $filterSQL = $this->getFilterSQL($filters);
-
-      $receivedSQL = $this->getReceivedSQL("receivingAddresses.address = '".$this->db->esc($address)."' ", $filterSQL);
-      $sentSQL = $this->getSentSQL("sendingAddresses.address = '".$this->db->esc($address)."' ", $filterSQL);
-
+      $address = $this->bc->db->esc($address);
+      $filterSQL = $this->bc->addresses->getFilterSQL($filters);
+      $receivedSQL = $this->bc->addresses->getReceivedSQL("receivingAddresses.address = '$address'", $filterSQL);
+      $sentSQL = $this->bc->addresses->getSentSQL("sendingAddresses.address = '$address'", $filterSQL);
       $ledgerSQL = "$receivedSQL union $sentSQL";
-      //$this->trace($ledgerSQL);
-
       return $this->bc->db->assocs($ledgerSQL);
-
     } else {
       $this->error('invalid address '.$address);
-
       return false;
     }
-
   }
 
 
@@ -712,27 +709,27 @@ class AddressesController extends Object
     $filterSQL = "";
     if (count($filters) > 0) {
 
-      if ($filters['startDate'] && ($startDate = $this->prepDate($filters['startDate'], 'start'))) {
+      if (array_key_exists('startDate', $filters) && ($startDate = $this->prepDate($filters['startDate'], 'start'))) {
         $filterSQL .= "and (transactions.blocktime >= '$startDate' or transactions.time >= '$startDate')";
       }
 
-      if ($filters['endDate'] && ($endDate = $this->prepDate($filters['endDate'], 'end'))) {
+      if (array_key_exists('endDate', $filters) && ($endDate = $this->prepDate($filters['endDate'], 'end'))) {
         $filterSQL .= "and (transactions.blocktime <= '$endDate' or transactions.time <= '$endDate')";
       }
 
-      if ($filters['txid']) {
+      if (array_key_exists('txid', $filters)) {
         $filterSQL .= "and transactions.txid = '".$this->db->esc($txid)."' ";
       }
 
-      if (is_numeric($filters['transaction_id'])) { //within a particular transaction
+      if (array_key_exists('transaction_id', $filters) && is_numeric($filters['transaction_id'])) { //within a particular transaction
         $filterSQL .= "and transactions.transaction_id = ".$filters['transaction_id']." ";
       }
 
-      if ($filters['receivingAddress']) { // sent from $sendingAddress to $receivingAddress
+      if (array_key_exists('receivingAddress', $filters)) { // sent from $sendingAddress to $receivingAddress
         $filterSQL .= "and receivingAddresses.address = ? ";
       }
 
-      if ($filters['sendingAddress']) { // received from $sendingAddress
+      if (array_key_exists('sendingAddress', $filters)) { // received from $sendingAddress
         $filterSQL .= "and sendingAddresses.address = '".$this->db->esc($filters['sendingAddress'])."' ";
       }
 

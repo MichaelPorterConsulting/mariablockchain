@@ -105,7 +105,9 @@ class TransactionOutput extends Object {
 
     $flds = ["transaction_id", "vout_id", "txid", "value", "n", "scriptPubKey", "spentat"];
     foreach ($flds as $fld) {
-      $this->{$fld} = $arr->{$fld};
+      if (isset($arr->{$fld})) {
+        $this->{$fld} = $arr->{$fld};
+      }
     }
 
     $this->value = $this->bc->round($arr->value)

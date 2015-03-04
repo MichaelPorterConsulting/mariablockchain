@@ -55,9 +55,10 @@ class BlockChain extends Common {
     $this->blocks = new BlocksController( $this );
   }
 
-  public function round($value) {
-    return round($value * 1e8) / 1e8;
-  }
+
+
+
+
 
 
   /**

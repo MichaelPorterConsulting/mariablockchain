@@ -123,6 +123,7 @@ class Transaction extends Object {
         $this->{$fld} = $arr->{$fld};
     }
 
+    $vinTotal = 0;
     if (is_array($arr->vin)) {
       foreach ($arr->vin as $vinArr) {
         $vin = new TransactionInput($this->bc, $vinArr);
@@ -131,6 +132,7 @@ class Transaction extends Object {
       }
     }
 
+    $voutTotal = 0;
     if (is_array($arr->vout)) {
       foreach ($arr->vout as $voutArr) {
         $vout = new TransactionOutput($this->bc, $voutArr);

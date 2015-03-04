@@ -6,6 +6,58 @@ class Common {
 
   private $_hooks;
 
+
+
+
+
+    /*
+    * Convert from satoshi's to BTC
+    *
+    *
+    */
+
+    public function toBtc($satoshi)
+    {
+
+      $convert = function($val) {
+        $converted = rtrim(bcdiv(intval($val), 100000000, 8),'0');
+        return round(floatval($converted), 8);
+      };
+
+      if (is_numeric($satoshi)) {
+          return $convert($satoshi);
+      } else if (is_array($satoshi)) {
+        foreach ($satoshi as $key => $val) {
+          $btc[$key] = $convert($val);
+        }
+        return $btc;
+      } else {
+        throw new \Exception("attempt to convert an illegal value");
+      }
+    }
+
+    /*
+    * Convert from BTC to satoshi
+    *
+    *
+    */
+
+    public function toSatoshi($btc) {
+      $convert = function($val) {
+        return round($val * 1e8);
+      };
+
+      if (is_numeric($btc)) {
+          return $convert($btc);
+      } else if (is_array($btc)) {
+        foreach ($btc as $key => $val) {
+          $satoshi[$key] = $convert($val);
+        }
+        return $satoshi;
+      }
+    }
+
+
   /**
   *
   *

@@ -102,7 +102,6 @@ class BlocksController extends Object
         "last_updated ".
       ") values (from_unixtime(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())";
 
-
       $bvals = ['isiidsisdss',
         $block->time,               //i
         $block->hash,               //s

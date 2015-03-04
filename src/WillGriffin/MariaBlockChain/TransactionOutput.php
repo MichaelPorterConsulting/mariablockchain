@@ -110,8 +110,6 @@ class TransactionOutput extends Object {
       }
     }
 
-    $this->value = $this->bc->round($arr->value);
-
     if (count($arr->scriptPubKey->addresses)) {
       foreach ($arr->scriptPubKey->addresses as $address) {
         $this->addresses[] = $this->bc->addresses->get($address);

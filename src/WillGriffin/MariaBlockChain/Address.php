@@ -254,7 +254,7 @@ class Address extends Object {
         $this->{$fld} = $val;
       }
 
-      if (is_numeric($arr->address_id)) {
+      if (isset($arr->address_id)) {
         $this->_address_id = $arr->address_id;
       }
     } else {

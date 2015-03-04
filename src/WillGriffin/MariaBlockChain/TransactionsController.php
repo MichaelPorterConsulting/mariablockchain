@@ -49,6 +49,7 @@ class TransactionsController extends Object
   public function decoderaw($raw)
   {
 
+    $this->bc->rpc->disableAcceleration();
     $info = $this->bc->rpc->decoderawtransaction($raw);
 
     if (!$info->confirmations) {
@@ -61,12 +62,6 @@ class TransactionsController extends Object
 
     if (!$info->blockhash) {
       $info->blockhash = null;
-    }
-
-    if (!$info->time) {
-
-      $info->time = time();
-
     }
 
     return $info;
@@ -97,14 +92,14 @@ class TransactionsController extends Object
   public function getId($tx, $forceScan = false, $depth = 1, $forceUpdate = false)
   {
 
-    $this->trace(__METHOD__." ".json_encode($tx));
+    $this->trace(__METHOD__);
     $updated = false; //if tx has been updated,
     $isFresh = false; //if tx has just been inserted don't bother updating
     $timestarted = time();
     $info = false;
+    $fresh = false;
 
-    if ($depth <= $this->maxDepth)
-    {
+    if ($depth <= $this->maxDepth) {
 
       if (is_string($tx)) {
         $txid = $tx;
@@ -121,25 +116,19 @@ class TransactionsController extends Object
       $transaction_id = $this->bc->db->value($idsql, ['s', $txid]);
 
       if (!is_numeric($transaction_id)) {
-
-        //$info = (is_object($info)) ? $info : ;
         if (!is_object($info)) {
-          $this->trace("no info adding");
           try {
             $info = $this->bc->transactions->getInfo($txid);
-            $this->trace($info);
           } catch (\Exception $e) {
-            $this->trace('no info availible');
             return false;
           }
           if (!$info) {
             return $info;
           }
-
         }
 
-
         $block = (isset($info->blockhash) && !empty($info->blockhash)) ? $this->bc->blocks->get($info->blockhash) : false;
+
 
         if (!$block) {
           $block = (object)[
@@ -147,6 +136,14 @@ class TransactionsController extends Object
             'block_id' => 0,
             'time' => 0
           ];
+        }
+
+        if (!$info->time) {
+          if ($block->time) {
+            $info->time = $block->time; //set to block time if availible
+          } else {
+            $info->time = time(); //assume it's not in a block yet
+          }
         }
 
         $insertTransactionSQL = 'insert into transactions '.
@@ -162,13 +159,12 @@ class TransactionsController extends Object
           $block->block_id,
           $info->txid,
           intval($info->time),
-          intval($info->inwallet)
+          (isset($info->inwallet)) ? $info->inwallet : 0
         ];
 
         if (count($info->vout) > 0) {
           $transaction_id = $this->bc->db->insert( $insertTransactionSQL, $insertTransactionFlds );
         } else {
-          $this->trace($info);
           throw new \Exception("Transactions must have at least one output\n".json_encode($info));
         }
 
@@ -185,7 +181,7 @@ class TransactionsController extends Object
           throw new \Exception("Insert failed: $insertTransactionSQL");
         }
 
-        $isFresh = true;
+        $fresh = true;
 
       }
 
@@ -207,47 +203,32 @@ class TransactionsController extends Object
           "from transactions where transaction_id = ?",
           ['i', $transaction_id]);
 
-        echo json_encode($dbinfo), "\n\n";
-        echo json_encode($info), "\n\n";
-
 
         //pretty much the only bit of a transaction that will be update is once
         //confirmed the block it shows up in
         if (is_object($info) && is_object($dbinfo) && $info->blockhash !== $dbinfo->blockhash) {
 
-          if (!isset($block) && !empty($info->blockhash)) {
+          if (!isset($block) && isset($info->blockhash)) {
             $block = $this->bc->blocks->get($info->blockhash);
           }
 
+          if ($info->time > $block->time) {
+            $info->time = $block->time;
+          }
+
           if (is_object($block) && is_numeric($block->block_id)) {
-            $usql = "update transactions set block_id = ?, blockhash = ?, last_updated = now() where transaction_id = ?";
-            $this->bc->db->update( $usql, ['isi', $block->block_id, $block->hash, $transaction_id] );
+            $usql = "update transactions set block_id = ?, blockhash = ?, time = ?, last_updated = now() where transaction_id = ?";
+            $this->bc->db->update( $usql, ['isii', $block->block_id, $block->hash, $info->time, $transaction_id] );
             $updated = true;
           }
 
         } else {
           if ($dbinfo && !$dbinfo->block_id) { //if unconfirmed prune with prejudice, otherwise leave to block control
-            echo "bad transaction, pruning..\n";
             $this->prune($txid);
             $transactions_id = false;
           }
         }
       }
-
-
-      //todo: still worthwhile ?
-      // if ($forceScan) {
-      //
-      //   if (count($info->vin)) {
-      //     $this->vInScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vin, $depth);
-      //   }
-      //
-      //   if (count($info->vout)) {
-      //     $this->vOutScan((object)['transaction_id' => $transaction_id, 'txid' => $info->txid], $info->vout);
-      //   }
-      //
-      //   $updated = true;
-      // }
 
       if ($updated) {
         $this->emit("updated", $tx);
@@ -281,7 +262,7 @@ class TransactionsController extends Object
   public function getVinId($tx, $vin, $depth = 0, $followtx = true)
   {
 
-    $this->trace(__METHOD__." $transaction_id ".json_encode($vin));
+    $this->trace(__METHOD__.":".json_encode($vin));
 
     if ($vin->txid && isset($vin->vout)) {
       $vinsId = $vin->txid."-".$vin->vout;
@@ -304,21 +285,15 @@ class TransactionsController extends Object
 
         //$this->trace("inserting vin");
         $visql = "insert into transactions_vins ".
-          "(transaction_id, txid, vout, asm, hex, sequence, coinbase, vout_id) ".
-          "values (?, ?, ?, ?, ?, ?, ?, ?)";
+          "(transaction_id, txid, vout, asm, vout_id) ".
+          "values (?, ?, ?, ?, ?)";
 
-        $vivals = ['isissisi',
+        $vivals = ['isiii',
           $tx->transaction_id,
           $vin->txid,
           $vin->vout,
-          $vin->scriptSig->asm,
-          $vin->scriptSig->hex,
           $vin->sequence,
-          (string) $vin->coinbase,
           $vin_vout_id];
-
-        //$this->trace($visql);
-        //$this->trace(json_encode($vivals));
 
         $vin_id = $this->bc->db->insert($visql, $vivals);
 
@@ -326,7 +301,7 @@ class TransactionsController extends Object
         if ($vin_vout_id > 0) {
           $this->bc->db->update(
             "update transactions_vouts set spentat = ? where vout_id = ?",
-            ['ss',$tx->txid, $vin_vout_id]);
+            ['si',$tx->txid, $vin_vout_id]);
         }
 
       }
@@ -369,8 +344,8 @@ class TransactionsController extends Object
   public function getVoutId($tx, $vout)
   {
 
-    $this->trace(__METHOD__." {$tx->transaction_id} {$vout->n}");
 
+    $this->trace(__METHOD__." {$tx->transaction_id} {$vout->n}");
 
     $voutIdSQL = "select vout_id from transactions_vouts where transaction_id = ? and n = ?";
     $voutIdFlds = ['ii', $tx->transaction_id, $vout->n];
@@ -383,10 +358,10 @@ class TransactionsController extends Object
         "(transaction_id, txid, value, n, asm, hex, reqSigs, type)".
         " values (?, ?, ?, ?, ?, ?, ?, ?)";
 
-      $voflds = ['isdissis',
+      $voflds = ['isiissis',
         $tx->transaction_id,
         $tx->txid,
-        round($vout->value * 1e8) / 1e8,
+        $vout->value,
         $vout->n,
         $vout->scriptPubKey->asm,
         $vout->scriptPubKey->hex,
@@ -406,6 +381,67 @@ class TransactionsController extends Object
 
     return $vout_id;
   }
+
+
+
+  /**
+  *
+  * decoderaw/satoshiconvert
+  *
+  *
+  * @param string txid transactions txid
+  *
+  * @return $info stdClass or false
+  *
+  * <code>
+  * <?php
+  *
+  * $txInfo = Transaction::getInfo('foobar');
+  *
+  * ?>
+  * </code>
+   */
+
+
+
+  public function decode($raw)
+  {
+    $tx = $this->bc->rpc->decoderawtransaction($raw);
+    for ($x = 0; $x < count($tx->vout); $x++) {    //convert to satoshis
+      $tx->vout[$x]->value = round($tx->vout[$x]->value * 1e8);
+    }
+    return $tx;
+  }
+
+
+  /**
+  *
+  * getraw/decode wrapper
+  *
+  *
+  * @param string txid transactions txid
+  *
+  * @return $tx stdClass|bool
+  *
+  * <code>
+  * <?php
+  *
+  * $tx = TransactionsController::fetch($txid);
+  *
+  * ?>
+  * </code>
+   */
+
+  public function fetch($txid)
+  {
+    echo "fetch $txid\n";
+    $raw = $this->bc->rpc->getrawtransaction($txid);
+    $tx = $this->decode($raw);    //seperated because decoding can be taken care of by a native function
+                                  //and raw is smaller for transport from rpc
+                                  // haha charade you are, rendered useless by the fact verbose getraw returns goodness i need
+    return json_decode(json_encode($tx)); //sigh
+  }
+
 
 
 
@@ -433,16 +469,13 @@ class TransactionsController extends Object
 
     try {
       $info = $this->bc->rpc->getrawtransaction($txid, 1);
-
       if (count($info->vin)) {
         $vinTotal = 0;
         foreach ($info->vin as $vin) {
           if ($vin->txid && $vin->vout) {
-
-            $vtx = $this->bc->rpc->getrawtransaction($vin->txid, 1);
+            $vtx = $this->fetch($vin->txid);
             $vv = $vtx->vout[$vin->vout];
-
-            sort($vv->scriptPubKey->addresses);
+            sort($vv->scriptPubKey->addresses);// sorted for consistency
             $vva = join(",", $vv->scriptPubKey->addresses);
             $vinVouts[$vva] = $vv;
             $vinTotal += $vv->value;
@@ -452,19 +485,18 @@ class TransactionsController extends Object
 
       if (count($info->vout)) {
         foreach ($info->vout as $vout) {
+          if (is_float($vout->value)) {
+            $vout->value = $this->toSatoshi($vout->value);
+          }
           $voutTotal += $vout->value;
         }
       }
 
-      $info->vinTotal = round($vinTotal * 1e8) / 1e8;
-      $info->voutTotal = round($voutTotal * 1e8) / 1e8;
-
       if ($vinTotal > 0) { // if not a mined block, calc fee
-        $info->fee = round(($vinTotal - $voutTotal) * 1e8) / 1e8;
+        $info->fee = $vinTotal - $voutTotal;
       } else {
         $info->fee = 0;
       }
-
       return $info;
 
     } catch (\Exception $e) {
@@ -682,7 +714,6 @@ class TransactionsController extends Object
         }
       }
 
-      /* todo: confirm with blockchain before making decisions about spending */
 
     }
   }

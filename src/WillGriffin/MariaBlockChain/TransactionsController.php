@@ -181,6 +181,7 @@ class TransactionsController extends Object
           throw new \Exception("Insert failed: $insertTransactionSQL");
         }
 
+        $updated = true;
         $fresh = true;
 
       }

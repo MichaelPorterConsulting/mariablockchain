@@ -85,8 +85,6 @@ class BlocksController extends Object
 
     if ($block->hash) {
 
-      echo "INSERTING BLOCK\n\n";
-
       $bsql = "insert into blocks ".
         "(time, ".
         "hash, ".
@@ -116,16 +114,7 @@ class BlocksController extends Object
         $block->nextblockhash       //s
       ];
 
-
-      echo $bsql, "\n";
-
-      echo json_encode($bvals), "\n";
-
-
-
       $block_id = $this->bc->db->insert($bsql, $bvals);
-
-      echo "block_id: ",$block_id,"\n";
 
       if ($insertTransactions === true) {
 

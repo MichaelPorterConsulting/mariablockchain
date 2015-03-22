@@ -37,7 +37,7 @@ class TransactionInput  extends Object
       $this->_loadArray($args);
     } else {
       echo "\nCouldn't load\n";
-      var_dump($args);
+      //var_dump($args);
       die;
     }
   }

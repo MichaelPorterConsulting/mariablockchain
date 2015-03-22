@@ -435,7 +435,6 @@ class TransactionsController extends Object
 
   public function fetch($txid)
   {
-    echo "fetch $txid\n";
     $raw = $this->bc->rpc->getrawtransaction($txid);
     $tx = $this->decode($raw);    //seperated because decoding can be taken care of by a native function
                                   //and raw is smaller for transport from rpc

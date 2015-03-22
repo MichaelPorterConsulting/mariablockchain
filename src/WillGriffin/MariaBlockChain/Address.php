@@ -258,7 +258,7 @@ class Address extends Object {
         $this->_address_id = $arr->address_id;
       }
     } else {
-      throw new \InvalidArgumentException('attempt to load invalid address from array');
+      throw new \InvalidArgumentException('attempt to load invalid address from array '.json_encode($arr));
     }
   }
 }

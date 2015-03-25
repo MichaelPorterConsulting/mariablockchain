@@ -1,31 +1,56 @@
 <?php
+/**
+ * AccountsController
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "Account.php";
 
+/**
+ * Utitlity methods relating to accounts
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class AccountsController extends Object
 {
 
-  public function __construct($blockchain)
-  {
-    parent::__construct($blockchain);
-  }
-
   /**
   *
-  * get primary key id for account or creates if not yet in db
-  *
-  *
-  * @param string account name of account to fetch id for
-  *
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain the blockchain scope
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
   *
   *
   * ?>
   * </code>
-   */
+  */
+  public function __construct($blockchain)
+  {
+    parent::__construct($blockchain);
+  }
+
+  /**
+  * Gets the primary key in the database for an account, inserts a new entry if need be
+  * @name getId
+  * @param str $account account in question
+  * @since 0.1.0
+  * @return int database account_id for account
+  * <code>
+  * <?php
+  * $account_id = $blockchain->accounts->getId('foo');
+  * ?>
+  * </code>
+  */
   public function getId($account)
   {
     //$this->trace(__METHOD__);
@@ -37,9 +62,23 @@ class AccountsController extends Object
     return $account_id;
   }
 
+  /**
+  * Get a list of ledger items for an account
+  * @name getLedger
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return array associate array of ledger entries
+  * <code>
+  * <?php
+  * $ledger = Account::getLedger('foo', [
+  *             'startDate' => "2013-03-13",
+  *             'endDate' => "2015-03-13" ]);
+  * ?>
+  * </code>
+  */
   public function getLedger($account, $filters)
   {
-    //$this->trace(__METHOD__." ".$account);
 
     if (empty($account)) {
       echo "invalid account";
@@ -58,30 +97,15 @@ class AccountsController extends Object
     return $this->bc->db->assocs($ledgerSQL);
   }
 
-
-
-
   /**
-  *
-  * returns a subquery to include any addresses that are in account $account
-  *
-  *
-  * @param string $account placed literally into the query to facilite naming a column in parent query.
-  *                               could be a value but quotes will have to be included.
-  *
-  * <code>
-  * <?php
-  *
-  *
-  *
-  * ?>
-  * </code>
-   */
-
+  * Get sql query to return all addresses in an account
+  * @name addressesSQL
+  * @param str $account account in question
+  * @since 0.1.0
+  * @return str
+  */
   protected function addressesSQL($account)
   {
-    //$this->trace(__METHOD__);
-
     $sql =  "select address ".
       "from accounts_addresses ".
       "where accounts_addresses.account = '".$this->bc->db->esc($account)."'";
@@ -90,46 +114,42 @@ class AccountsController extends Object
   }
 
   /**
-  *
-  * list of address credits (sent coins)
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
+  * Get a list of 'sent' ledger entries for an account
+  * @name getSent
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <code>
   * <?php
-  *
-  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $sents = Account::getSent('foo', [
+  *                    'startDate' => "2013-03-13",
+  *                    'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getSent($account, $filters = false)
   {
-    //$this->trace(__METHOD__);
-
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->bc->addresses->getSentSQL("sendingAddresses.address in ($accountSubQuery)", $filterSQL);
     return $this->bc->db->assocs($sql);
   }
 
   /**
-  *
-  * list of address debits (received coins)
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
+  * Get a list of 'received' ledger entries for an account
+  * @name getReceived
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <code>
   * <?php
-  *
-  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $receiveds = Account::getReceived('foo', [
+  *                    'startDate' => "2013-03-13",
+  *                    'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getReceived($account, $filters = false)
   {
     //$this->trace(__METHOD__);
@@ -140,49 +160,43 @@ class AccountsController extends Object
   }
 
   /**
-  *
-  * total recieved coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Total received satoshi to an account
+  * @name getReceivedTotal
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
+  * $receivedTotal = Account::getReceivedTotal('foo', [
+  *                    'startDate' => "2013-03-13",
+  *                    'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getReceivedTotal($account, $fiters = false)
   {
-    //$this->trace(__METHOD__);
-
     $accountSubQuery = $this->addressesSQL($account);
     $sql = $this->getReceivedTotalSQL(" receivingAddresses.address in ($accountSubQuery)", $filterSQL);
     $receivedTotal = $this->bc->db->value($sql);
-
     return $receivedTotal;
-
   }
 
   /**
-  *
-  * total sent (spent) coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Total satoshi sent from an account
+  * @name getSentTotal
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
+  * $sentTotal = Account::getSentTotal('foo', [
+  *                'startDate' => "2013-03-13",
+  *                'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getSentTotal($account, $filters = false)
   {
     //$this->trace(__METHOD__);
@@ -194,23 +208,19 @@ class AccountsController extends Object
     return $sentTotal;
   }
 
-
   /**
-  *
-  * total unsent (spent) coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Total satoshi of an accounts unspent outputs
+  * @name getUnspentTotal
+  * @param str $account account in question
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
-  *
   * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
   * ?>
   * </code>
-   */
-
+  */
   public function getUnspentTotal($account, $filters = false)
   {
     //$this->trace(__METHOD__);

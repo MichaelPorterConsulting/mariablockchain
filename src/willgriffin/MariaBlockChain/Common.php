@@ -1,47 +1,74 @@
 <?php
+/**
+ * Common
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
+/**
+ *
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class Common {
 
+  /**
+	 * _hooks
+	 * @var array $_hooks associative array with event name as keys and array of hooks attach as value iirc
+	 * @since 0.1.0
+	 */
   private $_hooks;
 
+  /**
+  * convert from satoshi to btc
+  * @name toSatoshi
+  * @param float $satoshi amount of satoshi to convert
+  * @since 0.1.0
+  * @return float
+  * <code>
+  * <?php
+  * $block = self::toBtc(161803399);
+  * ?>
+  * </code>
+  */
+  public function toBtc($satoshi)
+  {
 
+    $convert = function($val) {
+      $converted = rtrim(bcdiv(intval($val), 100000000, 8),'0');
+      return round(floatval($converted), 8);
+    };
 
-
-
-    /*
-    * Convert from satoshi's to BTC
-    *
-    *
-    */
-
-    public function toBtc($satoshi)
-    {
-
-      $convert = function($val) {
-        $converted = rtrim(bcdiv(intval($val), 100000000, 8),'0');
-        return round(floatval($converted), 8);
-      };
-
-      if (is_numeric($satoshi)) {
-          return $convert($satoshi);
-      } else if (is_array($satoshi)) {
-        foreach ($satoshi as $key => $val) {
-          $btc[$key] = $convert($val);
-        }
-        return $btc;
-      } else {
-        throw new \Exception("attempt to convert an illegal value");
+    if (is_numeric($satoshi)) {
+        return $convert($satoshi);
+    } else if (is_array($satoshi)) {
+      foreach ($satoshi as $key => $val) {
+        $btc[$key] = $convert($val);
       }
+      return $btc;
+    } else {
+      throw new \Exception("attempt to convert an illegal value");
     }
+  }
 
-    /*
-    * Convert from BTC to satoshi
-    *
-    *
+    /**
+    * convert from btc to satoshi
+    * @name toSatoshi
+    * @param float $btc amount of btc to convert
+    * @since 0.1.0
+    * @return int
+    * <code>
+    * <?php
+    * $block = self::toSatoshi(1.61803399);
+    * ?>
+    * </code>
     */
-
     public function toSatoshi($btc) {
       $convert = function($val) {
         return round($val * 1e8);
@@ -59,15 +86,15 @@ class Common {
 
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * emit an event
+  * @name emit
+  * @param string $event event to emit
+  * @param mixed $args data relating to this instance of the event
+  * @since 0.1.0
+  * @return void
   * <code>
   * <?php
-  *
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
@@ -85,15 +112,14 @@ class Common {
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * see if an event has any hooks attached
+  * @name hasHook
+  * @param string $event event to check
+  * @since 0.1.0
+  * @return boolean
   * <code>
   * <?php
-  *
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
@@ -107,15 +133,15 @@ class Common {
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * hook a function to an event
+  * @name hook
+  * @param string $event event name
+  * @param function $method method to run on event
+  * @since 0.1.0
+  * @return void
   * <code>
   * <?php
-  *
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
@@ -124,22 +150,78 @@ class Common {
     $this->_hooks[$event][] = $method;
   }
 
+
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * dumb, redundant -- toast
+  * @name round
+  * @param string value amount to round
+  * @since 0.1.0
+  * @return \MariaBlockChain\Block
   * <code>
   * <?php
-  *
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
-  public function round($value)
+  // public function round($value)
+  // {
+  //   return round($value * 1e8) / 1e8;
+  // }
+
+
+
+
+
+
+
+
+
+  /**
+  * Takes in a date, represented however, gets it sql friendly. Optionally sets the time to beginning or end of the day.
+  * @name prepDate
+  * @param str $dateStr address in question
+  * @param str $setTime additional filters
+  * @since 0.1.0
+  * @return string
+  * <code>
+  * $sent = $blockchain->addresses->getUnspentTotal(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
+  * </code>
+  */
+  public function prepDate($dateStr, $setTime = false)
   {
-    return round($value * 1e8) / 1e8;
+    //$this->trace(__METHOD__);
+
+    if (!is_numeric($dateStr)) {
+      $dateInt = strtotime($dateStr);
+    } else {
+      $dateInt = $dateStr;
+    }
+
+    if ($dateInt) {
+      switch($setTime) {
+
+        case 'end':
+          $timeStr = '23:59:59';
+        break;
+
+        case 'start':
+          $timeStr = '00:00:00';
+        break;
+
+        default:
+          $timeStr = 'H:i:s';
+        break;
+      }
+
+      return date("Y-m-d H:i:s", $dateInt);
+    } else {
+      $this->error('invalid date passed'); //should never happen in production without someone fucking around
+    }
   }
+
+
+
 
 }

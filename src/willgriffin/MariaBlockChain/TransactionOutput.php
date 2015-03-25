@@ -1,41 +1,118 @@
 <?php
+/**
+ * TransactionOutput
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "Transaction.php";
 
-class TransactionOutput extends Object {
 
+/**
+* TransactionOutput
+* @author willgriffin <https://github.com/willgriffin>
+* @since 0.1.0
+*/
+class TransactionOutput extends Object
+{
+
+  /**
+  * database vout_id
+  * @var int $vout_id primary key in the transactions_vouts table
+  * @since 0.1.0
+  */
   public $vout_id;
+
+  /**
+  * database transaction_id
+  * @var int $transaction_id primary key in the 'transactions' table
+  * @since 0.1.0
+  */
   public $transaction_id;
 
+  /**
+  * addresses authorizing the output
+  * @var array $addresses each will have had to sign
+  * @since 0.1.0
+  */
   public $addresses;
 
+  /**
+  * scriptPubKey
+  * @var string $scriptPubKey public key
+  * @since 0.1.0
+  */
   public $scriptPubKey;
 
+  /**
+  * amount of output
+  * @var int $value satoshis to send
+  * @since 0.1.0
+  */
   public $value;
+
+  /**
+  * aka 'vout' in certain contexts .. index in transaction tx array
+  * @var int $myParam This is my parameter
+  * @since 0.1.0
+  */
   public $n;
+
+  /**
+  * assembly
+  * @var string $asm scriptSig assembly
+  * @since 0.1.0
+  */
   public $asm;
+
+  /**
+  * hex
+  * @var string $hex scriptSig assembly
+  * @since 0.1.0
+  */
   public $hex;
+
+  /**
+  * required signatures
+  * @var int $reqSigs number of required signatures
+  * @since 0.1.0
+  */
   public $reqSigs;
+
+  /**
+  * type
+  * @var string $type pubkeyhash|multisig|??
+  * @since 0.1.0
+  */
   public $type;
 
+  /**
+  * txid
+  * @var string $txid transaction id
+  * @since 0.1.0
+  */
   public $txid;
 
+  /**
+  * spentat
+  * @var string $spentat txid where output is spent if so
+  * @since 0.1.0
+  */
   public $spentat;
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * constructor
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain the scope
+  * @param array $args properties to mix in
+  * @since 0.1.0
+  * @return void
   */
   public function __construct($blockchain, $args, $n = false)
   {
@@ -49,18 +126,12 @@ class TransactionOutput extends Object {
     }
   }
 
+
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * as a stdClass
+  * @name stdClass
+  * @since 0.1.0
+  * @return stdClass
   */
   public function stdClass()
   {
@@ -83,17 +154,11 @@ class TransactionOutput extends Object {
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * mix in an array
+  * @name _loadArray
+  * @param array $arr field to set
+  * @since 0.1.0
+  * @return void
   */
   private function _loadArray($arr)
   {

@@ -1,80 +1,78 @@
 <?php
+/**
+ * BlocksController
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "Block.php";
 
+
+/**
+ *
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class BlocksController extends Object
 {
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * constructor
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain scope
+  * @since 0.1.0
+  * @return void
   */
-  public function __construct($blockchain) {
-
+  public function __construct($blockchain)
+  {
     parent::__construct($blockchain);
-
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * Gets the primary key in the database for a block, inserts a new record if need be
+  * @name getId
+  * @param string|stdClass $block either blockhash or stdClass as returned by rpc to get id for
+  * @since 0.1.0
+  * @return int database primary key for block
   * <code>
   * <?php
-  *
-  *
+  * $address_id = $blockchain->blocks->getId('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
   public function getId($block)
   {
-    $this->trace(__METHOD__);
     if (gettype($block) === "string") {
       $block = $this->bc->rpc->getblock($block);
     }
 
-    $this->trace("blockhash::getId {$block->hash}");
     $block_id = $this->bc->db->value("select block_id ".
       "from blocks ".
       "where hash = ?",
       ['s', $block->hash]);
 
-    $this->trace("found block_id ($block_id)");
-
     if (!$block_id) {
-      $this->trace("no love, creating ");
       $block_id = $this->insertBlock($block, false);
     }
-    $this->trace("block_id $block_id");
 
     return $block_id;
   }
 
+
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * insert block into the database, optionally all it's transactions too
+  * way to slow, raw block parsing is a priority
+  * @name insertBlock
+  * @param string|stdClass $block either blockhash or stdClass as returned by rpc to insert
+  * @param boolean $insertTransactions whether to add all the transactions in the block as well
+  * @since 0.1.0
+  * @return int new block_id
   */
   public function insertBlock($block, $insertTransactions = true)
   {
@@ -149,9 +147,7 @@ class BlocksController extends Object
             "values (?, ?)",
             ['ii', $block_id, $transaction_id]);
         }
-
       }
-
     } else {
       $this->error('invalid argument for insertBlock');
     }
@@ -159,19 +155,15 @@ class BlocksController extends Object
     return $block_id;
   }
 
+
   /**
-  *
-  *
   * gets transaction_ids, inserting them into db if not already existent
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * way to slow, raw block parsing is a priority
+  * @name getTransactionIds
+  * @param string|stdClass $block either blockhash or stdClass as returned by rpc to insert
+  * @param boolean $update force transactions to update
+  * @since 0.1.0
+  * @return array list of transaction_ids
   */
   public function getTransactionIds($block, $update = false)
   {
@@ -192,24 +184,24 @@ class BlocksController extends Object
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * retrieve a \Block with caching
+  * @name get
+  * @param string $blockhash blockhash of the block to retrieve
+  * @param boolean $refresh if true forces refreshing of entry in cache
+  * @since 0.1.0
+  * @return \MariaBlockChain\Block
   * <code>
   * <?php
-  *
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
   */
-  public function get($blockhash, $requery = false)
+  public function get($blockhash, $refresh = false)
   {
     $this->trace(__METHOD__." $blockhash");
     $cached = $this->bc->cache->get("block:$blockhash");
 
-    if ($cached !== false && $requery === false) {
+    if ($cached !== false && $refresh === false) {
 
       $block = new Block($this->bc, $cached);
 
@@ -222,32 +214,22 @@ class BlocksController extends Object
     return $block;
   }
 
-
-
   /**
-  *
-  * retrieves info about a block
-  *
-  *
+  * retrieves info about a block, redundant -- toast
+  * @name get
   * @param string blockhash block hash
-  *
+  * @since 0.1.0
+  * @return \MariaBlockChain\Block
   * <code>
   * <?php
-  *
-  * $blockInfo = Blocks::getInfo('foobar');
-  *
+  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
   * ?>
   * </code>
-   */
-
+  */
   public function getInfo($blockhash)
   {
-    $this->trace(__METHOD__." $blockhash");
     $info = $this->bc->rpc->getblock($blockhash);
-
     return $info;
   }
-
-
 
 }

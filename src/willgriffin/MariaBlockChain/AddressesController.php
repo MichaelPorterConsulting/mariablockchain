@@ -1,26 +1,41 @@
 <?php
+/**
+ * AddressesController
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "Address.php";
 
+
+/**
+ *
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class AddressesController extends Object
 {
+
+  /**
+  * prefix for ids in memcache, redundant - move to $blockchain
+  * @var str $_cachePrefix
+  * @since 0.1.0
+  */
   protected $_cachePrefix;
+
   /**
   *
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-   */
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain the scope
+  * @since 0.1.0
+  * @return object
+  */
   public function __construct($blockchain)
   {
 
@@ -33,83 +48,38 @@ class AddressesController extends Object
 
   /**
   *
-  * populates objects properties with returned info and returns validity boolean
-  *
-  *
+  * @name returns information about an address
   * @param string address related address to fetch the info
-  *
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
   *
-  * $address_id = Address::getInfo('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
+  * $address_id = $blockchain->addresses->getInfo('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
   *
   * ?>
   * </code>
-   */
-  public function validate($address)
-  {
-    //$this->trace(__METHOD__." $address");
-
-    $addrInfo = $this->bc->rpc->validateaddress($this->address);
-    if ($addrInfo->isvalid) {
-      $this->address = $addrInfo->address;
-      $this->isvalid = $addrInfo->isvalid;
-      $this->ismine = $addrInfo->ismine;
-      $this->isscript = $addrInfo->isscript;
-      $this->pubkey = $addrInfo->pubkey;
-      $this->iscompressed = $addrInfo->iscompressed;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-  *
-  * returns information about an address
-  *
-  *
-  * @param string address related address to fetch the info
-  *
-  * <code>
-  * <?php
-  *
-  * $address_id = Address::getInfo('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
-  * ?>
-  * </code>
-  *
   */
   public function getInfo($address)
   {
-    //$this->trace(__METHOD__." $address");
-
     $addrInfo = $this->bc->rpc->validateaddress($address);
-    //$this->trace($addrInfo);
-
     return $addrInfo;
   }
 
   /**
-  *
-  * retrieves primary key for an address from the db, if non existant adds it
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
+  * Gets the primary key in the database for an address, inserts a new record if need be
+  * @name getAddressId
+  * @param str $address address to retrieve and id for
+  * @since 0.1.0
+  * @return int database primary key for address
   * <code>
   * <?php
-  *
-  * $address_id = Address::getId('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $address_id = $blockchain->addresses->getId('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
   * ?>
   * </code>
-   */
-
+  */
   public function getAddressId($address)
   {
-    //$this->trace(__METHOD__." $address");
-
     $address_id = $this->bc->db->value("select address_id ".
       "from addresses ".
       "where address = ?",
@@ -145,58 +115,41 @@ class AddressesController extends Object
             intval($info->iscompressed)]);
 
       } else {
-        //$this->trace("invalid address");
-        echo "invalid address";
-        die;
+        //validity check is assumed
+        $this->error("attempt to get id for invalid address");
       }
-
     }
 
     return $address_id;
   }
 
 
-
-
   /**
-  *
-  * generic named alias to be overwritten in extending classes
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
-  * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
-  * ?>
-  * </code>
+  * genericly named alias to getAddressId to be overwritten in extending classes
+  * @name getId
+  * @param str $address address to retrieve and id for
+  * @since 0.1.0
+  * @return int primary key for address
   */
-
   public function getId($address) {
     return $this->getAddressId($address);
   }
 
   /**
-  *
-  * retrieve an Address object
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * retrieve an \Address with caching
+  * @name get
+  * @param string $address address to retrive object for
+  * @param boolean $refresh if true forces refreshing of entry in cache
+  * @since 0.1.0
+  * @return \MariaBlockChain\Address
   * <code>
   * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
+  * $address = $blockchain->addresses->get('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
   * ?>
   * </code>
   */
-
   public function get($address, $refresh = false)
   {
-    //$this->trace( __METHOD__." ".$address );
     if ($address) {
       $cached = $this->bc->cache->get((string)$address);
       if ($cached !== false && $refresh === false) {
@@ -205,53 +158,34 @@ class AddressesController extends Object
         $address = new Address($this->bc, (string)$address);
         $this->updateCached((string)$address, $address->toArray());
       }
-
       return $address;
     }
   }
 
-
-  public function updateCached($what, $data)
-  {
-    $this->currency->cache->set( $this->_cachePrefix.$what, $data, false, 60 );
-  }
-
-  public function wipeCached($what)
-  {
-    $this->currency->cache->delete( $this->_cachePrefix.$what );
-  }
-
-
-
   /**
-  *
-  * sql to retrieve list of address credits (sent coins)
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Build the sql to retrieve 'sent' entries for an address
+  * @name getSentSQL
+  * @param str $addressSQL where clause for addresses to include
+  * @param str $filterSQL additional filters
+  * @param array $filters query filters
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <code>
   * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
+  * $sents = Account::getSent('foo', [
+  *                    'startDate' => "2013-03-13",
+  *                    'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
   */
-
   public function getSentSQL($addressSQL, $filterSQL = "")
   {
-    //$this->trace(__METHOD__);
-
     $sentSQL = "select ".
         "distinct receivingVouts.vout_id as vout_id, ".
         "'sent' as type, ".
         "receivingAddresses.address as toAddress, ".
         "sendingAddresses.address as fromAddress, ".
         "receivingVouts.value as value,".
-        //"(select time from transactions where transaction_id = receivingVouts.transaction_id) as txtime, ".
-        //"(select txid from transactions where transaction_id = receivingVouts.transaction_id) as txid, ".
-        //"(select confirmations from transactions where transaction_id = receivingVouts.transaction_id) as confirmations ".
         "unix_timestamp(transactions.time) as txtime, ".
         "transactions.txid as txid ".
       "from addresses as sendingAddresses ".
@@ -271,25 +205,23 @@ class AddressesController extends Object
 
 
   /**
-  *
-  * list of address credits (sent coins)
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
+  * Get a list of 'sent' ledger entries for an account
+  * @name getSent
+  * @param str $sendingAddress address in question
+  * @param array $filters array of filters
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <code>
   * <?php
-  *
-  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $sents = $blockchain->addresses->getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx', [
+  *           'startDate' => "2013-03-13",
+  *           'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getSent($sendingAddress, $filters = false)
   {
-    //$this->trace(__METHOD__);
-    $sendingAddress = $this->bc->db->esc($sendingAddress);
+    $sendingAddress = $this->bc->db->esc($sendingAddress); //hopefully this is more than redundant
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getSentSQL("sendingAddresses.address = '$sendingAddress'", $filterSQL);
     return $this->bc->db->assocs($sql);
@@ -297,22 +229,11 @@ class AddressesController extends Object
 
 
   /**
-  *
-  * sql to retrieve list of address debits (received coins)
-  *
-  *
-  * @param string address related address to fetch received ledger sql for
-  *
-  * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getReceivedSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
-  *
-  * ?>
-  * </code>
+  * Build the sql to retrieve 'received' entries for an address
   *
   * Depends on the database containing the following stored function
+  *
+  * <code>
   *
   * drop function if exists sendingAddresses;
   * delimiter  ~
@@ -353,23 +274,29 @@ class AddressesController extends Object
   *
   * delimiter ;
   *
+  * </code>
+  *
+  * @name getReceivedSQL
+  * @param str $addressSQL where clause for addresses to include
+  * @param str $filterSQL additional filters
+  * @since 0.1.0
+  * @return string
+  * <code>
+  * <?php
+  * $receivedSql = $blockchain->addresses->getReceievedSQL(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
+  * ?>
+  * </code>
   */
-
   public function getReceivedSQL($addressSQL, $filterSQL = "")
   {
-    //$this->trace(__METHOD__);
-    //todo: optimize joins / inputs... experiment with 'change' more
-    //todo: time in db relates to when the database record was added, fiddle with other options
-
     $receivedSQL = "select ".
         "transactions_vouts.vout_id as vout_id, ".
-        "\"received\" as type, ".
+        "'received' as type, ".
         "receivingAddresses.address as toAddress, ".
         "sendingAddresses(transactions_vouts.transaction_id) as fromAddress, ".
         "transactions_vouts.value as value, ".
-        //"(select time from transactions where transaction_id = transactions_vouts.transaction_id) as txtime, ".
-        //"(select txid from transactions where transaction_id = transactions_vouts.transaction_id) as txid, ".
-        //"(select confirmations from transactions where transaction_id = transactions_vouts.transaction_id) as confirmations ".
         "unix_timestamp(transactions.time) as txtime, ".
         "transactions.txid as txid ".
       "from addresses as receivingAddresses ".
@@ -381,58 +308,50 @@ class AddressesController extends Object
         "and transactions_vouts.value is not null ".
         $filterSQL;
 
-    ////$this->trace($receivedSQL);
     return $receivedSQL;
-
   }
 
 
   /**
-  *
-  * list of address debits (received coins)
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
-  * <code>
+  * Get a list of 'received' ledger entries for an address
+  * @name getReceived
+  * @param str $address address in question
+  * @param array $filters query filters to be applied
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <?php
-  *
-  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $receiveds = $blockchain->addresses->getReceived(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getReceived($receivingAddress, $filters = false)
   {
-    //$this->trace(__METHOD__);
-
     $receivingAddress = $this->bc->db->esc($receivingAddress);
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getReceivedSQL("receivingAddresses.address = '$receivingAddress'", $filterSQL);
-
     return $this->bc->db->assocs($sql);
   }
 
   /**
-  *
-  * list of addresses sending and receiving vouts
-  *
-  *
-  * @param string address related address to fetch the ledger for
-  *
-  * <code>
+  * Get a list of ledger entries for an account (sent and received).
+  * Only as good as the database is populated
+  * @name getLedger
+  * @param \MariaBlockChain\Address|string $address address in question
+  * @param array $filters query filters to be applied
+  * @since 0.1.0
+  * @return array associate array of ledger entries
   * <?php
-  *
-  * $addressOutputs = Address::getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
+  * $ledger = $blockchain->addresses->getLedger(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * ?>
   * </code>
-   */
-
+  */
   public function getLedger($address, $filters = false)
   {
-    if (is_string((string)$address)) {
+    if (!empty((string)$address)) {
 
       $address = $this->bc->db->esc($address);
       $filterSQL = $this->bc->addresses->getFilterSQL($filters);
@@ -441,31 +360,21 @@ class AddressesController extends Object
       $ledgerSQL = "$receivedSQL union $sentSQL";
       return $this->bc->db->assocs($ledgerSQL);
     } else {
-      $this->error('invalid address '.$address);
+      $this->error('attempt to load ledger for invalid address "$address"');
       return false;
     }
   }
 
-
   /**
-  *
-  * nessecary sql to retrieve total received by addresses matching $whereSQL
-  *
-  *
-  * @param string $whereSQL sql used to select addresses to include
-  *
-  * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getReceivedTotalSQL("receivingAddress = 'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx'");
-  *
-  * ?>
-  * </code>
-   */
+  * Build the sql to calculate total received for one or more addresses
+  * @name getReceivedTotalSQL
+  * @param str $addressSQL where clause for addresses to include
+  * @param str $filterSQL additional filters
+  * @since 0.1.0
+  * @return string
+  */
   public function getReceivedTotalSQL($addressSQL, $filterSQL)
   {
-    //$this->trace(__METHOD__);
-
     $sql = "select  ".
       "sum(receivingVouts.value), ".
       "sendingAddresses.address ".
@@ -477,12 +386,10 @@ class AddressesController extends Object
       "left outer join transactions_vouts_addresses as receivingVoutsAddresses on receivingVoutsAddresses.vout_id = receivingVouts.vout_id ".
       "left outer join addresses as receivingAddresses on receivingVoutsAddresses.address_id = receivingAddresses.address_id ".
       "left outer join transactions on receivingVouts.transaction_id = transactions.transaction_id ".
-
     "where ($addressSQL) ".
       "and sendingVoutsAddresses.address_id != receivingVoutsAddresses.address_id ".
       "$filterSQL ".
       "group by receivingVoutsAddresses.address_id";
-    ////$this->trace($sql);
 
     return $sql;
   }
@@ -490,21 +397,18 @@ class AddressesController extends Object
 
 
   /**
-  *
-  * total recieved coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Returns the total received for an address in satoshis
+  * @name getReceivedTotal
+  * @param str $receivingAddress where clause for addresses to include
+  * @param str $filters additional filters
+  * @since 0.1.0
+  * @return int
   * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
-  * ?>
+  * $received = $blockchain->addresses->getReceivedTotal(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
-   */
-
+  */
   public function getReceivedTotal($receivingAddress, $filters = false)
   {
     //$this->trace(__METHOD__);
@@ -517,92 +421,62 @@ class AddressesController extends Object
   }
 
   /**
-  *
-  * nessecary sql to retrieve total sent by addresses matching $whereSQL
-  *
-  *
-  * @param string $whereSQL sql used to select addresses to include
-  *
-  * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentTotalSQL("sendingAddresses = 'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx'");
-  *
-  * ?>
-  * </code>
-   */
-
+  * Build the sql to calculate total satoshis sent to one or more addresses
+  * @name getSentTotalSQL
+  * @param str $addressSQL where clause for addresses to include
+  * @param str $filterSQL additional filters
+  * @since 0.1.0
+  * @return string
+  */
   public function getSentTotalSQL($addressSQL, $filterSQL = "")
   {
-    //$this->trace(__METHOD__);
-
-      $sql = "select sum(total) from (".
-          "select sum(receivingVouts.value) as total ".
-           "from addresses as sendingAddresses ".
-            "inner join transactions_vouts_addresses on transactions_vouts_addresses.address_id = sendingAddresses.address_id ".
-            "inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id ".
-            "inner join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id ".
-            "left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id ".
-            "left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id ".
-            "left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id ".
-            "left outer join transactions on receivingVouts.transaction_id = transactions.transaction_id ".
-              "where $addressSQL and receivingVouts.value is not null $filterSQL ".
-            " group by transactions_vouts_addresses.vout_id ".
-        ") as totals";
-
-    //$this->trace($sql);
+    $sql = "select sum(total) from (".
+      "select sum(receivingVouts.value) as total ".
+       "from addresses as sendingAddresses ".
+        "inner join transactions_vouts_addresses on transactions_vouts_addresses.address_id = sendingAddresses.address_id ".
+        "inner join transactions_vouts on transactions_vouts_addresses.vout_id = transactions_vouts.vout_id ".
+        "inner join transactions_vins on transactions_vins.vout_id = transactions_vouts.vout_id ".
+        "left outer join transactions_vouts as receivingVouts on transactions_vins.transaction_id = receivingVouts.transaction_id ".
+        "left outer join transactions_vouts_addresses as receivingVoutAddresses on receivingVouts.vout_id = receivingVoutAddresses.vout_id ".
+        "left outer join addresses as receivingAddresses on receivingVoutAddresses.address_id = receivingAddresses.address_id ".
+        "left outer join transactions on receivingVouts.transaction_id = transactions.transaction_id ".
+          "where $addressSQL and receivingVouts.value is not null $filterSQL ".
+        " group by transactions_vouts_addresses.vout_id ".
+      ") as totals";
     return $sql;
-
   }
 
   /**
-  *
-  * total sent (spent) coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Returns the total sent from an address in satoshis
+  * @name getSentTotal
+  * @param str $sendingAddress address in question
+  * @param str $filters additional filters
+  * @since 0.1.0
+  * @return int
   * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
-  * ?>
+  * $sent = $blockchain->addresses->getSentTotal(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
-   */
-
+  */
   public function getSentTotal($sendingAddress, $filters = false)
   {
-    //$this->trace(__METHOD__);
-
     $filterSQL = $this->getFilterSQL($filters);
     $sql = $this->getSentTotalSQL("sendingAddresses.address = ? ", $filterSQL);
     $sentTotal = $this->bc->db->value($sql, $sqlargs);
-
     return $sentTotal;
   }
 
   /**
-  *
-  * total unsent (spent) coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
-  * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
-  * ?>
-  * </code>
-   */
-
+  * Build the sql to calculate total satoshis still waiting to be spent for one or more addresses
+  * @name getUnspentTotalSQL
+  * @param str $addressSQL address in question
+  * @param str $filterSQL additional filters
+  * @since 0.1.0
+  * @return string
+  */
   public function getUnspentTotalSQL($addressSQL, $filterSQL)
   {
-    //$this->trace(__METHOD__);
-    //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
-
     $sql = "select  ".
       "sum(vouts.value) ".
     "from addresses ".
@@ -611,132 +485,81 @@ class AddressesController extends Object
       "inner join transactions on vouts.transaction_id = transactions.transaction_id ".
     "where vouts.spentat is null and ".
     "($addressSQL) $filterSQL";
-
     return $sql;
   }
 
-
   /**
-  *
-  * total unsent (spent) coins
-  *
-  *
-  * @param string address related address to fetch sent ledger sql for
-  *
+  * Gets the total of satoshis still waiting to be spent for one or more addresses
+  * @name getUnspentTotalSQL
+  * @param str $addressSQL address in question
+  * @param str $filterSQL additional filters
+  * @since 0.1.0
+  * @return string
   * <code>
-  * <?php
-  *
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
-  *
-  * ?>
+  * $sent = $blockchain->addresses->getUnspentTotal(
+  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
-   */
-
+  */
   public function getUnspentTotal($address, $filters = false)
   {
     //$this->trace(__METHOD__);
-    //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);'
-
+    //todo: benchmark id based '$address_id = $this->bc->addresses->getId($address);
     $filterSQL = $this->getFilterSQL( $filters );
-
-    //$this->trace("getUnspentTotal sql:");
     $sql = $this->unspentTotalSQL("addresses.address = '$address'", $filterSQL);
     $receivedTotal = $this->bc->db->value($sql);
-
     return $receivedTotal;
   }
 
   /**
-  *
-  * @param
-  *
+  * Assembles any filters passed into sql
+  * valid filters are:
+  * startDate - records after this date
+  * endDate - records before this date
+  * transaction_id|txid - records pertaining to this transaction
+  * receivingAddress - received to this address
+  * sendingAddress - sent to this address
+  * @name getFilterSQL
+  * @param str $filters array of filters
+  * @since 0.1.0
+  * @return string
   * <code>
-  * <?php
-  *
-  *
-  * ?>
+  * $sent = $blockchain->addresses->getFilterSQL(
+  *    ['startDate' => "2013-03-13",
+  *     'endDate' => "2015-03-13",
+  *     'transaction_id' => $tx->transaction_id,
+  *     'txid' => "85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8",
+  *     'receivingAddress' => "mq7se9wy2egettFxPbmn99cK8v5AFq55Lx",
+  *     'sendingAddress' => "mq7se9wy2egettFxPbmn99cK8v5AFq55Lx"
+  *    ]);
   * </code>
   */
-  public function prepDate($dateStr, $setTime = false)
-  {
-    //$this->trace(__METHOD__);
 
-    if (!is_numeric($dateStr)) {
-      $dateInt = strtotime($dateStr);
-    } else {
-      $dateInt = $dateStr;
-    }
-
-    if ($dateInt) {
-
-      switch($setTime) {
-        case 'end':
-          $timeStr = '23:59:59';
-        break;
-
-        case 'start':
-          $timeStr = '00:00:00';
-        break;
-
-        default:
-          $timeStr = 'H:i:s';
-        break;
-      }
-
-      return date("Y-m-d H:i:s", $dateInt);
-    } else {
-      $this->error('invalid date passed'); //should never happen in production without someone fucking around
-    }
-  }
-
-  /**
-  *
-  * assembles any filters passed into sql
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-  */
   public function getFilterSQL($filters)
   {
-    //$this->trace(__METHOD__);
-
     $filterSQL = "";
     if (count($filters) > 0) {
-
       if (array_key_exists('startDate', $filters) && ($startDate = $this->prepDate($filters['startDate'], 'start'))) {
         $filterSQL .= "and (transactions.blocktime >= '$startDate' or transactions.time >= '$startDate')";
       }
-
       if (array_key_exists('endDate', $filters) && ($endDate = $this->prepDate($filters['endDate'], 'end'))) {
         $filterSQL .= "and (transactions.blocktime <= '$endDate' or transactions.time <= '$endDate')";
       }
-
       if (array_key_exists('txid', $filters)) {
         $filterSQL .= "and transactions.txid = '".$this->db->esc($txid)."' ";
       }
-
       if (array_key_exists('transaction_id', $filters) && is_numeric($filters['transaction_id'])) { //within a particular transaction
         $filterSQL .= "and transactions.transaction_id = ".$filters['transaction_id']." ";
       }
-
       if (array_key_exists('receivingAddress', $filters)) { // sent from $sendingAddress to $receivingAddress
-        $filterSQL .= "and receivingAddresses.address = ? ";
+        $filterSQL .= "and receivingAddresses.address = '".$this->db->esc($filters['receivingAddress'])."' ";
       }
-
       if (array_key_exists('sendingAddress', $filters)) { // received from $sendingAddress
         $filterSQL .= "and sendingAddresses.address = '".$this->db->esc($filters['sendingAddress'])."' ";
       }
-
     }
 
     return $filterSQL;
-
   }
 
 }

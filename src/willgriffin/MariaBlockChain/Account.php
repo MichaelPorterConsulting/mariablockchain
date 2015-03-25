@@ -1,13 +1,29 @@
 <?php
+/**
+ * Account
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "BlockChain.php";
 
+/**
+ * An account in a wallet
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class Account extends Object
 {
-
+  /**
+	 * The string uid of the account
+	 * @var str $name The account name
+	 * @since 0.1.0
+	 */
   public $name;
-
-
 }

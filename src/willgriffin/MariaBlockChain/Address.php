@@ -1,46 +1,102 @@
 <?php
+/**
+ * Address
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
+
 namespace willgriffin\MariaBlockChain;
 
 require_once "BlockChain.php";
 
+/**
+ *
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class Address extends Object {
 
+  /**
+  * A sample parameter
+  * @var int $myParam This is my parameter
+  * @since 0.1.0
+  */
   protected $_address_id;
+
+  /**
+  * prefix for ids in memcache
+  * @var str $_cachePrefix
+  * @since 0.1.0
+  */
   protected $_cachePrefix;
 
+  /**
+  * address string
+  * @var string $address string version of this address
+  * @since 0.1.0
+  */
   public $address;
+
+  /**
+  * has the address passed validation
+  * @var boolean $isValid true for passed, false for fail, null for unchecked
+  * @since 0.1.0
+  */
   public $isvalid;
+
+  /**
+  * is the address in the working account / wallet
+  * @var boolean $ismine true if so
+  * @since 0.1.0
+  */
   public $ismine;
+
+  /**
+  * is script
+  * @var int $isscript typical
+  * @since 0.1.0
+  */
   public $isscript;
+
+  /**
+  * public key
+  * @var int $pubkey typical
+  * @since 0.1.0
+  */
   public $pubkey;
+
+  /**
+  * is compressed
+  * @var boolean $iscompressed typical
+  * @since 0.1.0
+  */
   public $iscompressed;
 
   /**
   *
-  *
-  *
-  *
-  * @param BlockChain $blockchain
-  *
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain the blockchain scope
+  * @param array $args additional arguments and overrides
+  * @since 0.1.0
+  * @return object
   * <code>
   * <?php
   *
   *
   * ?>
   * </code>
-   */
+  */
   public function __construct($blockchain, $args)
   {
-
     parent::__construct($blockchain);
-
-    //$this->trace(__METHOD__);
-
     if (is_numeric($args)) {
       $this->_address_id = $args;
       $this->_fromId();
     } else if (is_string($args)) {
-      ////$this->trace("loading from string $args");
       $this->address = $args;
       $info = $this->bc->addresses->getInfo($this->address);
       $this->_fromArray( $info );
@@ -50,19 +106,18 @@ class Address extends Object {
   }
 
   /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
+  * deprecated and *should* be completely phased out, confirm and toast
+  * @name __get
+  * @param str $var variable to retrieve
+  * @since 0.1.0
+  * @return mixed
   * <code>
   * <?php
   *
   *
   * ?>
   * </code>
-   */
+  */
   public function __get($var)
   {
     //$this->trace(__METHOD__);
@@ -87,19 +142,18 @@ class Address extends Object {
   }
 
   /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
+  * returns address as string if requested as such
+  * @name __get
+  * @param str $var variable to retrieve
+  * @since 0.1.0
+  * @return str $this->address
   * <code>
   * <?php
   *
   *
   * ?>
   * </code>
-   */
+  */
   public function __toString()
   {
     //$this->trace(__METHOD__);
@@ -108,23 +162,13 @@ class Address extends Object {
 
 
   /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-   */
+  * serialize
+  * @name toArray
+  * @since 0.1.0
+  * @return array
+  */
   public function toArray()
   {
-    //$this->trace(__METHOD__);
-
     $arr = [
       "address" => $this->address,
       "isvalid" => $this->isvalid,
@@ -136,91 +180,18 @@ class Address extends Object {
     ];
 
     return $arr;
-
   }
 
 
 
-
-
   /**
-  *
-  * populates objects properties with returned info and returns validity boolean
-  *
-  *
-  * @param string address related address to fetch the info
-  *
-  * <code>
-  * <?php
-  *
-  * $address_id = Address::getInfo('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',0);
-  *
-  * ?>
-  * </code>
-   */
-  public function validate()
-  {
-    //$this->trace(__METHOD__." {$this->address}");
-    //todo: move to controller / toast
-
-    $addrInfo = $this->bc->rpc->validateaddress("{$this->address}");
-    if ($addrInfo->isvalid)
-    {
-      $this->address = $addrInfo->address;
-      $this->isvalid = $addrInfo->isvalid;
-      $this->ismine = $addrInfo->ismine;
-      $this->isscript = $addrInfo->isscript;
-      $this->pubkey = $addrInfo->pubkey;
-      $this->iscompressed = $addrInfo->iscompressed;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-   */
-  public function getId()
-  {
-    //$this->trace(__METHOD__." {$this->address}");
-    //todo: move to controller / toast
-
-    if (!is_numeric($this->_address_id)) {
-      $this->_address_id = $this->bc->addresses->getId($this->address);
-    }
-    return $this->_address_id;
-  }
-
-  /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-   */
+  * load from id
+  * @name _fromId
+  * @since 0.1.0
+  * @return void
+  */
   private function _fromId()
   {
-    //$this->trace(__METHOD__." {$this->address}");
-
     $dbinfo = $this->bc->db->object("select * from addresses where address_id = ?", ['i', $this->_address_id]);
     $this->address = $dbinfo->address;
     $this->pubkey = $dbinfo->pubkey;
@@ -228,19 +199,12 @@ class Address extends Object {
 
 
   /**
-  *
-  *
-  *
-  *
-  * @param string
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
-   */
+  * load from array
+  * @name _fromArray
+  * @param str $arr variable to retrieve
+  * @since 0.1.0
+  * @return void
+  */
   private function _fromArray($arr)
   {
     //$this->trace(__METHOD__);

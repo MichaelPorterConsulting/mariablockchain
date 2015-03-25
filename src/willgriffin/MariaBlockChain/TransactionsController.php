@@ -1,4 +1,13 @@
 <?php
+/**
+ * TransactionsController
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
@@ -6,27 +15,50 @@ require_once "Transaction.php";
 require_once "TransactionInput.php";
 require_once "TransactionOutput.php";
 
+
+/**
+ *
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class TransactionsController extends Object
 {
+  //
+  // /**
+  // * A sample parameter
+  // * @var int $myParam This is my parameter
+  // * @since 0.1.0
+  // */
+  // public $transactions; //todo: replace with memcache
+  //
+  // /**
+  // * A sample parameter
+  // * @var int $myParam This is my parameter
+  // * @since 0.1.0
+  // */
+  // public $vins; //todo: replace with memcache
+  //
+  // /**
+  // * A sample parameter
+  // * @var int $myParam This is my parameter
+  // * @since 0.1.0
+  // */
+  // public $vouts; //todo: replace with memcache
 
-  public $transactions; //todo: replace with memcache
-  public $vins; //todo: replace with memcache
-  public $vouts; //todo: replace with memcache
-
+  /**
+  * how deep to cache in db
+  * @var int $maxDepth max recursion level
+  * @since 0.1.0
+  */
   public $maxDepth = 5;
 
   /**
   *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain scope
+  * @param array $args additional arguments and overrides
+  * @since 0.1.0
+  * @return object
   */
   public function __construct($blockchain)
   {
@@ -34,22 +66,19 @@ class TransactionsController extends Object
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * decode a raw transaction
+  * @name decoderaw
+  * @param string $raw transaction in hex form
+  * @since 0.1.0
+  * @return void
   * <code>
-  * <?php
-  *
-  *
-  * ?>
+  * $txUnspents = $blockchain->transactions->decoderaw($txid);
   * </code>
   */
   public function decoderaw($raw)
   {
 
-    $this->bc->rpc->disableAcceleration();
+    $this->bc->rpc->disableAcceleration(); //todo: why? lack of block info and need to mimic rpc? fix
     $info = $this->bc->rpc->decoderawtransaction($raw);
 
     if (!$info->confirmations) {
@@ -69,25 +98,18 @@ class TransactionsController extends Object
   }
 
   /**
-  *
-  * get primary key id for transaction or creates if not yet in db. updates db if stale.. kinda greasy, love forthcoming
-  *
-  *
-  * @param string txid transactions txid
-  * @param boolean forceScan
-  * @param integer depth also scan in transactions this many degrees away
-  * @param string forceUpdate
-  *
-  *
+  * get primary key id for transaction or creates if not yet in db. updates db if stale. could definitely use a rewrite
+  * @name getId
+  * @param string $tx txid or raw transaction
+  * @param boolean $forceScan force confirmation of db with rpc
+  * @param int $depth what level of recursion we're currently at
+  * @param boolean $forceUpdate force database update with rpc queried data
+  * @since 0.1.0
+  * @return void
   * <code>
-  * <?php
-  *
-  * $transaction_id = Transaction::getId('foobar');
-  *
-  * ?>
+  * $transaction_id = $blockchain->transactions->getId('foobar');
   * </code>
-   */
-
+  */
   //todo: refactor
   public function getId($tx, $forceScan = false, $depth = 1, $forceUpdate = false)
   {
@@ -242,29 +264,23 @@ class TransactionsController extends Object
   }
 
 
-
-
   /**
-  *
-  * get primary key id for transaction input. if not in the database inserts and grabs related tx
-  *
-  *
-  * @param integer $transaction_id parent transaction primary key
-  * @param array $vin associative array representing transaction input
-  * @param integer distanceAway current recursion level
-  * @param boolean $followtx whether to scan source transaction
-  *
+  * get primary key id for transaction input. if not in the database inserts and grabs related transaction as well
+  * @name getVinId
+  * @param string $tx transaction in question
+  * @param int $vin index in the transactions vin array
+  * @param int $depth recursion depth
+  * @param boolean $followtx if true get related transaction
+  * @since 0.1.0
+  * @return void
   * <code>
-  *
-  * $vout_id = TransactionOutput::getId(1, ...);
-  *
+  * $txUnspents = $blockchain->transactions->getvout($txid);
   * </code>
   */
   public function getVinId($tx, $vin, $depth = 0, $followtx = true)
   {
 
     $this->trace(__METHOD__.":".json_encode($vin));
-
     if ($vin->txid && isset($vin->vout)) {
       $vinsId = $vin->txid."-".$vin->vout;
 
@@ -327,24 +343,19 @@ class TransactionsController extends Object
     return $vin_id;
   }
 
-
   /**
-  *
   * get primary key id for transaction output, inserts if not represented yet
-  *
-  *
-  * @param integer $transaction_id parent transaction primary key
-  * @param array $vout associative array representing vout
-  *
+  * @name getVoutId
+  * @param Transaction $transaction_id parent transaction primary key
+  * @param stdClass $vout associative array representing vout
+  * @since 0.1.0
+  * @return void
   * <code>
-  *
-  * $vout_id = TransactionOutput::getId(1, ...);
-  *
+  * $txUnspents = $blockchain->transactions->getVoutId($tx, $vout);
   * </code>
-   */
+  */
   public function getVoutId($tx, $vout)
   {
-
 
     $this->trace(__METHOD__." {$tx->transaction_id} {$vout->n}");
 
@@ -385,26 +396,17 @@ class TransactionsController extends Object
 
 
 
+
   /**
-  *
   * decoderaw/satoshiconvert
-  *
-  *
-  * @param string txid transactions txid
-  *
-  * @return $info stdClass or false
-  *
+  * @name decode
+  * @param string $raw decode raw transaction and convert values to satoshi
+  * @since 0.1.0
+  * @return stdClass
   * <code>
-  * <?php
-  *
-  * $txInfo = Transaction::getInfo('foobar');
-  *
-  * ?>
+  * $transaction = $blockchain->transactions->decode($raw);
   * </code>
-   */
-
-
-
+  */
   public function decode($raw)
   {
     $tx = $this->bc->rpc->decoderawtransaction($raw);
@@ -416,53 +418,37 @@ class TransactionsController extends Object
 
 
   /**
-  *
   * getraw/decode wrapper
-  *
-  *
-  * @param string txid transactions txid
-  *
-  * @return $tx stdClass|bool
-  *
+  * @name
+  * @param string $txid transaction in question
+  * @param int $n index in the transactions vout array
+  * @since 0.1.0
+  * @return stdClass|bool
   * <code>
-  * <?php
-  *
-  * $tx = TransactionsController::fetch($txid);
-  *
-  * ?>
+  * $tx = $blockchain->transactions->fetch($txid);
   * </code>
-   */
-
+  */
   public function fetch($txid)
   {
     $raw = $this->bc->rpc->getrawtransaction($txid);
-    $tx = $this->decode($raw);    //seperated because decoding can be taken care of by a native function
-                                  //and raw is smaller for transport from rpc
-                                  // haha charade you are, rendered useless by the fact verbose getraw returns goodness i need
+    $tx = $this->decode($raw); //for flexibility in decoding methods
     return json_decode(json_encode($tx)); //sigh
   }
 
 
 
 
-  /**
-  *
-  * retrieves info about a transaction
-  *
-  *
-  * @param string txid transactions txid
-  *
-  * @return $info stdClass or false
-  *
-  * <code>
-  * <?php
-  *
-  * $txInfo = Transaction::getInfo('foobar');
-  *
-  * ?>
-  * </code>
-   */
 
+  /**
+  * retrieves info about a transaction
+  * @name getInfo
+  * @param string $txid transaction in question
+  * @since 0.1.0
+  * @return void
+  * <code>
+  * $txUnspents = $blockchain->transactions->getInfo($txid);
+  * </code>
+  */
   public function getInfo($txid)
   {
     $this->trace(__METHOD__." $txid");
@@ -504,24 +490,22 @@ class TransactionsController extends Object
     }
   }
 
+
   /**
-  *
-  * ensures the transactions related vouts represented in the database are up to date
-  *
-  *
-  * @param integer transaction_id transaction txid
+  * ensures the transactions related vouts represented in the database is accurate
+  * @name
+  * @param Transaction transaction to scan
   * @param array vouts array of associated vouts to add
-  *
+  * @since 0.1.0
+  * @return void
   * <code>
-  * <?php
-  *
-  * $txRaw = Transaction::vOutScan('foobar');
-  *
-  * ?>
+  * $txUnspents = $blockchain->transactions->vOutScan($tx, $vouts);
   * </code>
-   */
+  */
   //todo: make second argument optional, if not set get vouts from bitcoind jsonrpc
   //todo: pointless or handy in a fork? if the latter needs to update the db if change detected
+  //      pretty sure this is overkill if not useless .. only thing that could change without a new txid is the transaction_id
+  //      which will happen when a transaction pruned from a forked branch shows up again in the main with a new id
   public function vOutScan($tx, $vouts)
   {
     $this->trace(__METHOD__." {$tx->transaction_id} ");
@@ -540,23 +524,17 @@ class TransactionsController extends Object
   }
 
   /**
-  *
-  * ensures the transactions related vins representation in the database is up to date
-  *
-  *
+  * ensures the transactions vins representation in the database is accurate
+  * @name vInScan
   * @param integer transaction_id transaction txid
   * @param array vins array of associated vouts to add
   * @param integer distanceAway current recursion level
-  *
+  * @since 0.1.0
+  * @return void
   * <code>
-  * <?php
-  *
-  * $txRaw = Transaction::vOutScan('foobar');
-  *
-  * ?>
+  * $txUnspents = $blockchain->transactions->vInScan($tx, $vins, $depth);
   * </code>
-   */
-  //todo: make second argument optional, if not set get vins from bitcoind jsonrpc
+  */
   public function vInScan($tx, $vins, $depth = 0)
   {
     $this->trace(__METHOD__." {$tx->transaction_id}");
@@ -573,24 +551,24 @@ class TransactionsController extends Object
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
+  * retrieve a \Transaction with caching
+  * @name get
+  * @param string $txid txid to retrieve object for
+  * @param boolean $refresh if true forces refreshing of entry in *memcache*, refreshing database is done with getId
+  * @since 0.1.0
+  * @return Transaction
   * <code>
   * <?php
-  *
-  *
+  * $address = $blockchain->addresses->get('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8', true);
   * ?>
   * </code>
   */
-  public function get($txid, $requery = false)
+  public function get($txid, $refresh = false)
   {
     $this->trace(__METHOD__." $txid");
     $cached = $this->bc->cache->get("$txid");
 
-    if ($cached !== false && $requery === false) {
+    if ($cached !== false && $refresh === false) {
       $tx = new Transaction($this->bc, $cached);
     } else {
       $this->trace("loading transaction from txid");
@@ -602,6 +580,17 @@ class TransactionsController extends Object
     return $tx;
   }
 
+  /**
+  * retrieve an output by txid and index
+  * @name getvout
+  * @param string $txid transaction in question
+  * @param int $n index in the transactions vout array
+  * @since 0.1.0
+  * @return void
+  * <code>
+  * $txUnspents = $blockchain->transactions->getvout('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
+  * </code>
+  */
   public function getvout($txid, $n)
   {
     $this->trace(__METHOD__." $txid $n");
@@ -622,15 +611,20 @@ class TransactionsController extends Object
     return $vout;
   }
 
-
   /**
-  *
   * prunes a transaction and all it's descendants
   *
   * in the event we've cached a raw transaction from the wallet server that has
   * since proven to be invalid, clean it out of the database. also used to clean
   * up after a fork
   *
+  * @name prune
+  * @param string $txid transaction in question
+  * @since 0.1.0
+  * @return void
+  * <code>
+  * $txUnspents = $blockchain->transactions->prune('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
+  * </code>
   */
   public function prune($txid)
   {
@@ -653,25 +647,23 @@ class TransactionsController extends Object
       $this->bc->db->update("delete from transactions where transaction_id = ?", ['i', $transaction_id]);
       $this->bc->db->update("delete from transactions_vouts where transaction_id = ?", ['i', $transaction_id]);
       $this->bc->db->update("delete from transactions_vins where transaction_id = ?", ['i', $transaction_id]);
-
+      $this->bc->cache->wipe($this->_cachePrefix.$txid);
     }
   }
 
 
 
   /**
-  *
-  *
-  *
-  * @param integer $txid checks and updates a transactions vouts and returns a list of those that are unspent
-  *
+  * checks and updates a transactions outputs and returns a list of those that are still unspent
+  * @name listunspents
+  * @param string $txid transaction in question
+  * @param array $args properties to mix in
+  * @since 0.1.0
+  * @return void
   * <code>
-  *
-  * $vout_id = TransactionOutput::getId(1, ...);
-  *
+  * $txUnspents = $blockchain->transactions->listunspent('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
   * </code>
   */
-
   public function listunspents($txid) {
     $this->trace(__METHOD__." $txid");
 
@@ -698,9 +690,7 @@ class TransactionsController extends Object
 
         if ($vin) {
 
-          // update the transaction_vout
-          // this should on be needed in special circumstances and is here mostly just in case
-
+          // ensure the output is marked as spent
           $usql = "update transactions_vouts set spentat = ? where txid = ? and n = ?";
           $uflds = ['ssi',$vin->txid, $tx->txid, $vout->n];
 
@@ -708,13 +698,9 @@ class TransactionsController extends Object
           $updated = true;
 
         } else { //no record in database indicating it was spent, return true
-
           $unspents[] = $vout;
-
         }
       }
-
-
     }
   }
 }

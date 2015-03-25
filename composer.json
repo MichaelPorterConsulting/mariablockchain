@@ -1,22 +1,31 @@
 {
-    "name": "willgriffin/mariablockchain",
-    "description": "MariaDB BlockChain PHP Classes",
-    "type": "library",
-    "license": "BSD-2-Clause",
-    "authors": [
-        {
-            "name": "Will Griffin",
-            "email": "willgriffin@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {
-        "php": ">=5.4.0",
-         "willgriffin/mariainterface": "dev-master"
-    },
-    "autoload": {
-        "psr-0": {
-            "WillGriffin": "src/"
-        }
-    }
+	"name": "willgriffin/mariablockchain",
+	"version": "0.1.0",
+	"homepage": "https://github.com/willgriffin/mariablockchain",
+	"description": "",
+	"keywords": [
+		"php"
+	],
+	"authors": [
+		{
+			"name": "willgriffin",
+			"homepage": "https://github.com/willgriffin",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/willgriffin/mariablockchain/issues",
+		"source": "https://github.com/willgriffin/mariablockchain"
+	},
+	"license": "MIT",
+	"type": "library",
+	"require": {
+		"php": ">=5.3.0",
+		"monolog/monolog": "1.*"
+	},
+	"require-dev": {
+		"phpdocumentor/phpdocumentor": "2.*",
+		"phpunit/phpunit": "3.*",
+		"sebastian/phpcpd": "2.*"
+	}
 }

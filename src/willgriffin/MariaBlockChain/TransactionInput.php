@@ -1,65 +1,96 @@
 <?php
+/**
+ * TransactionInput
+ * @package MariaBlockChain
+ * @version 0.1.0
+ * @link https://github.com/willgriffin/mariablockchain
+ * @author willgriffin <https://github.com/willgriffin>
+ * @license https://github.com/willgriffin/mariablockchain/blob/master/LICENSE
+ * @copyright Copyright (c) 2014, willgriffin
+ */
 
 namespace willgriffin\MariaBlockChain;
 
 require_once "Transaction.php";
 
+
+/**
+ * TransactionInput
+ * @author willgriffin <https://github.com/willgriffin>
+ * @since 0.1.0
+ */
 class TransactionInput  extends Object
 {
 
+  /**
+  * transaction output
+  * @var TransactionObject $_vout dynamically loaded transaction output object
+  * @since 0.1.0
+  */
   protected $_vout; // TransactionOutput, accessed though 'voutObj' property
 
+
+  /**
+  * output txid
+  * @var string $txid transaction id of the corresponding output
+  * @since 0.1.0
+  */
   public $txid;
+
+  /**
+  * output index
+  * @var int $vout output index
+  * @since 0.1.0
+  */
   public $vout;
 
+
+  /**
+  * scriptSig
+  * @var int $scriptSig first half of the script
+  * @since 0.1.0
+  */
   public $scriptSig;
+
+  /**
+  * sequence
+  * @var int $sequence priority if tx lock_time > 0
+  * @since 0.1.0
+  */
   public $sequence;
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * constructor
+  * @name __construct
+  * @param MariaBlockChain\MariaBlockChain $blockchain the blockchain scope
+  * @param array $args properties to mix in
+  * @since 0.1.0
+  * @return void
   */
   public function __construct($blockchain, $args)
   {
     $this->bc = $blockchain;
-    $this->trace(__METHOD__." ".json_encode($args));
+    //$this->trace(__METHOD__." ".json_encode($args));
 
     if (is_array($args) || ($args instanceof \stdClass)) {
       $this->_loadArray($args);
     } else {
-      echo "\nCouldn't load\n";
-      //var_dump($args);
-      die;
+      $this->error("tried to initialze TransactionInput with invalid arguments")
     }
   }
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * load TransactionOutput when needed and alias index
+  * @name __get
+  * @param string $fld field to fetch
+  * @since 0.1.0
+  * @return void
   */
   public function __get($fld)
   {
     $this->trace(__METHOD__." ".$fld);
-    switch ($fld)
-    {
+    switch ($fld) {
+
       case 'voutObj':
 
         if (is_string($this->txid) && is_numeric($this->vout)) {
@@ -86,34 +117,31 @@ class TransactionInput  extends Object
     }
   }
 
-
+  /**
+  * maintain alias
+  * @name __get
+  * @param string $fld field to set
+  * @param array $val value to use
+  * @since 0.1.0
+  * @return void
+  */
   public function __set($fld, $val)
   {
     switch ($fld) {
-
       case 'n':
         $this->vout = $val;
-      break;
-
-      default:
-
       break;
     }
   }
 
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * maintain alias
+  * @name __get
+  * @param string $fld field to set
+  * @param array $val value to use
+  * @since 0.1.0
+  * @return void
   */
   public function stdClass()
   {
@@ -126,6 +154,12 @@ class TransactionInput  extends Object
     return (object) $arr;
   }
 
+  /**
+  * returns voutObj
+  * @name getVout
+  * @since 0.1.0
+  * @return TransactionOutput
+  */
   public function getVout()
   {
     return $this->voutObj;
@@ -133,17 +167,11 @@ class TransactionInput  extends Object
 
 
   /**
-  *
-  *
-  *
-  * @param
-  *
-  * <code>
-  * <?php
-  *
-  *
-  * ?>
-  * </code>
+  * mix in an array
+  * @name _loadArray
+  * @param array $arr field to set
+  * @since 0.1.0
+  * @return void
   */
   private function _loadArray($arr)
   {

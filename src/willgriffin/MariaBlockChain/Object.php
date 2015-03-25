@@ -22,12 +22,11 @@ require_once "Common.php";
 class Object extends Common {
 
   /**
-	 * A sample parameter
-	 * @var int $myParam This is my parameter
+	 * blockchain
+	 * @var MariaBlockChain $bc blockchain the object is part of
 	 * @since 0.1.0
 	 */
   public $bc;
-
 
   /**
   * alias to bc->rpc
@@ -44,20 +43,16 @@ class Object extends Common {
   public $db;
 
   /**
-  * alias to bc->rpc
+  * alias to bc->cache
   * @var \Memcache $cache memcache
   * @since 0.1.0
   */
   public $cache;
 
-
-
-
-
   /**
   * constructor
   * @name __construct
-  * @param MariaBlockChain\MariaBlockChain $blockchain the blockchain scope
+  * @param MariaBlockChain $blockchain blockchain scope
   * @since 0.1.0
   * @return void
   */
@@ -75,10 +70,9 @@ class Object extends Common {
   * @param string $msg trace message
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * self::error('it happened');
-  * ?>
   * </code>
   */
   public function trace( $msg )
@@ -96,10 +90,9 @@ class Object extends Common {
   * @param string $msg error message
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * self::error('it hit the fan');
-  * ?>
   * </code>
   */
   public function error( $msg )
@@ -110,8 +103,6 @@ class Object extends Common {
       $this->bc->error( $msg );
     }
   }
-
-
 
   /**
   * caches a serialized object

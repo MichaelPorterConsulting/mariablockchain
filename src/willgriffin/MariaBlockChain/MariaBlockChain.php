@@ -24,10 +24,10 @@ require_once "BlocksController.php";
  * @author willgriffin <https://github.com/willgriffin>
  * @since 0.1.0
  */
-class BlockChain extends Common {
+class MariaBlockChain extends Common {
 
   /**
-  * Database interface object
+  * Database interface
   * @var \willgriffin\MariaInterface\MariaInterface $db database interface
   * @since 0.1.0
   */
@@ -91,9 +91,8 @@ class BlockChain extends Common {
   * @param array $options additional options
   * @since 0.1.0
   * @return object
-  * <code>
-  * <?php
   *
+  * <code>
   * //note, requirement is my accelerated fork of \nbobtc\bitcoind atm hence the magic_bytes arguments
   * $rpc = new \Nbobtc\Bitcoind\Bitcoind(new \Nbobtc\Bitcoind\Client(
   *   $rpcprotocol."://".$rpcuser.":".$rpcpass."@".$rpchost.":".$rpcport."/",
@@ -117,8 +116,6 @@ class BlockChain extends Common {
   * $bitcoin->addresses->get($bitcoinAddress);
   * $bitcoin->addresses->getLedger($bitcoinAddress);
   * $bitcoin->transactions->get($txid);
-  *
-  * ?>
   * </code>
   */
   public function __construct( $rpc, $db, $cache, $options = [] )
@@ -147,10 +144,9 @@ class BlockChain extends Common {
   * @param str $msg message to trace
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * $blockchain->trace('something happened');
-  * ?>
   * </code>
   */
   public function trace( $msg )
@@ -173,10 +169,9 @@ class BlockChain extends Common {
   * @param str $msg an error message
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * $blockchain->error('something bad happened');
-  * ?>
   * </code>
   */
   public function error( $msg )

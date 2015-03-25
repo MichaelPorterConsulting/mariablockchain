@@ -11,8 +11,7 @@
 
 namespace willgriffin\MariaBlockChain;
 
-require_once "BlockChain.php";
-
+require_once "Object.php";
 
 /**
  *
@@ -20,7 +19,6 @@ require_once "BlockChain.php";
  * @since 0.1.0
  */
 class Transaction extends Object {
-
 
   /**
   *
@@ -189,7 +187,6 @@ class Transaction extends Object {
       break;
 
     }
-
   }
 
 

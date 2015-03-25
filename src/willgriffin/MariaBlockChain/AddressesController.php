@@ -52,10 +52,11 @@ class AddressesController extends Object
   * @param string address related address to fetch the info
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
   *
-  * $address_id = $blockchain->addresses->getInfo('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  * $address_id = $blockchain->addresses->getInfo('1124fWAtrp31Apd35zkoYqw2jRerE97HE4');
   *
   * ?>
   * </code>
@@ -72,9 +73,10 @@ class AddressesController extends Object
   * @param str $address address to retrieve and id for
   * @since 0.1.0
   * @return int database primary key for address
+  *
   * <code>
   * <?php
-  * $address_id = $blockchain->addresses->getId('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  * $address_id = $blockchain->addresses->getId('1124fWAtrp31Apd35zkoYqw2jRerE97HE4');
   * ?>
   * </code>
   */
@@ -142,9 +144,10 @@ class AddressesController extends Object
   * @param boolean $refresh if true forces refreshing of entry in cache
   * @since 0.1.0
   * @return \MariaBlockChain\Address
+  *
   * <code>
   * <?php
-  * $address = $blockchain->addresses->get('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  * $address = $blockchain->addresses->get('1124fWAtrp31Apd35zkoYqw2jRerE97HE4');
   * ?>
   * </code>
   */
@@ -170,6 +173,7 @@ class AddressesController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return array associate array of ledger entries
+  *
   * <code>
   * <?php
   * $sents = Account::getSent('foo', [
@@ -211,9 +215,10 @@ class AddressesController extends Object
   * @param array $filters array of filters
   * @since 0.1.0
   * @return array associate array of ledger entries
+  *
   * <code>
   * <?php
-  * $sents = $blockchain->addresses->getSent('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx', [
+  * $sents = $blockchain->addresses->getSent('1124fWAtrp31Apd35zkoYqw2jRerE97HE4', [
   *           'startDate' => "2013-03-13",
   *           'endDate' => "2015-03-13" ]);
   * ?>
@@ -281,12 +286,11 @@ class AddressesController extends Object
   * @param str $filterSQL additional filters
   * @since 0.1.0
   * @return string
+  *
   * <code>
-  * <?php
   * $receivedSql = $blockchain->addresses->getReceievedSQL(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
-  * ?>
   * </code>
   */
   public function getReceivedSQL($addressSQL, $filterSQL = "")
@@ -319,11 +323,10 @@ class AddressesController extends Object
   * @param array $filters query filters to be applied
   * @since 0.1.0
   * @return array associate array of ledger entries
-  * <?php
+  *
   * $receiveds = $blockchain->addresses->getReceived(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
-  * ?>
   * </code>
   */
   public function getReceived($receivingAddress, $filters = false)
@@ -342,12 +345,11 @@ class AddressesController extends Object
   * @param array $filters query filters to be applied
   * @since 0.1.0
   * @return array associate array of ledger entries
-  * <?php
+  *
   * $ledger = $blockchain->addresses->getLedger(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * ?>
-  * </code>
   */
   public function getLedger($address, $filters = false)
   {
@@ -403,11 +405,11 @@ class AddressesController extends Object
   * @param str $filters additional filters
   * @since 0.1.0
   * @return int
-  * <code>
+  *
   * $received = $blockchain->addresses->getReceivedTotal(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
-  * </code>
+  *
   */
   public function getReceivedTotal($receivingAddress, $filters = false)
   {
@@ -453,9 +455,10 @@ class AddressesController extends Object
   * @param str $filters additional filters
   * @since 0.1.0
   * @return int
+  *
   * <code>
   * $sent = $blockchain->addresses->getSentTotal(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
   */
@@ -495,9 +498,10 @@ class AddressesController extends Object
   * @param str $filterSQL additional filters
   * @since 0.1.0
   * @return string
+  *
   * <code>
   * $sent = $blockchain->addresses->getUnspentTotal(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
   */
@@ -523,14 +527,15 @@ class AddressesController extends Object
   * @param str $filters array of filters
   * @since 0.1.0
   * @return string
+  *
   * <code>
   * $sent = $blockchain->addresses->getFilterSQL(
   *    ['startDate' => "2013-03-13",
   *     'endDate' => "2015-03-13",
   *     'transaction_id' => $tx->transaction_id,
   *     'txid' => "85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8",
-  *     'receivingAddress' => "mq7se9wy2egettFxPbmn99cK8v5AFq55Lx",
-  *     'sendingAddress' => "mq7se9wy2egettFxPbmn99cK8v5AFq55Lx"
+  *     'receivingAddress' => "1124fWAtrp31Apd35zkoYqw2jRerE97HE4",
+  *     'sendingAddress' => "1124fWAtrp31Apd35zkoYqw2jRerE97HE4"
   *    ]);
   * </code>
   */

@@ -4,67 +4,54 @@ mariablockchain
 About
 --------------
 
+A relational database representation of related bitcoin based blockchain records.
+
+This libraries functions that make use of indexes (most of the fun stuff) are only as accurate as the records stored in the database.
+
+What this means is that to be of any value, either use the bitcoind rpc 'wallet' trigger to teach it about a transaction to be
+accurate for your wallet, or use the 'block' trigger event to parse every block. A combination of both insures accuracy for any
+address and immediacy of awareness of in-wallet transactions.
+
 URL: [https://github.com/willgriffin/mariablockchain](https://github.com/willgriffin/mariablockchain)
 
 Author: willgriffin
 
-
-
-Build dependencies
+Example
 --------------
 
-In order to build your generated Composer project from its source, you will need Grunt and PHP on the command line.
+```php
 
-So, you must install PHP5 on your system on your command line. Test it:
+//note, requirement is modified fork \nbobtc\bitcoind incorporating bitcoin-lib-php atm hence the magic_bytes arguments
+$rpc = new \Nbobtc\Bitcoind\Bitcoind(new \Nbobtc\Bitcoind\Client(
+  $rpcprotocol."://".$rpcuser.":".$rpcpass."@".$rpchost.":".$rpcport."/",
+  null, //cert for ssl
+  $magic_byte,
+  $magic_p2sh_byte
+));
+
+$cache = new \Memcache;
+$cache->connect($memcachehost, $memcacheport);
+
+$db = new \willgriffin\MariaInterface\MariaInterface (array(
+  "host" => $dbhost,
+  "user" => $dbuser,
+  "pass" => $dbpass,
+  "port" => $dbport,
+  "name" => $dbname
+));
+
+$bitcoin = new MariaBlockChain($rpc, $db, $cache);
+
+$tx = $bitcoin->transactions->get($txid);
+
+$addresss = $bitcoin->addresses->get($bitcoinAddress);
+
+$ledger = $blockchain->addresses->getLedger(
+  '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
+  ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
+
 
 ```
-php --help
-```
-
-
-To install Grunt globally on the command line (and run the above build task), run:
-
-```
-npm install -g grunt-cli
-```
-
-
-Then, with Grunt, you can install Composer, PhpDocumentor, PhpUnit and PhpCPD locally. Just run once:
-
-```
-grunt init
-```
-
-Then, you can install PhpDocumentor, PhpUnit and PhpCPD locally. Just run once:
-
-```
-php composer.phar install -v
-php composer.phar require -v --dev "phpunit/phpunit:3.*"
-```
-
-Finally, you should also install the PHP extension named Xdebug, which will be used by PhpUnit for code coverage.
-
-
-Build the sources
---------------
-
-Once all your dependencies are installed, you can build your project with Grunt:
-
-```
-grunt build
-```
-
-The build process will run the following tasks:
-
-* PhpLint: runs php -l over the "src" folder
-* Runs the tests located in the "tests" folder with [PHPUnit](http://phpunit.de/)
-* Generates a [PhpDocumentor](http://phpdoc.org) documentation in the "doc" folder from the files of the "src" folder
-* Detects copy/paste of code in the files of the "src" folder with [PhpCPD](https://github.com/sebastianbergmann/phpcpd)
-
-[![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
-
-
-
 
 
 Credits
@@ -77,9 +64,14 @@ This project uses the following as development dependencies:
 * [PHPUnit](http://phpunit.de/)
 * [PhpDocumentor](http://phpdoc.org)
 * [Php Copy/Paste Detector](https://github.com/sebastianbergmann/phpcpd)
-
+* [nbobtc/bitcoind (modified)](https://github.com/willgriffin/bitcoind-php)
 
 License
 --------------
 
 [License](https://github.com/willgriffin/mariablockchain/blob/master/LICENSE)
+
+
+Donate
+-------------
+[1124fWAtrp31Apd35zkoYqw2jRerE97HE4](https://coink.it/#!/1124fWAtrp31Apd35zkoYqw2jRerE97HE4)

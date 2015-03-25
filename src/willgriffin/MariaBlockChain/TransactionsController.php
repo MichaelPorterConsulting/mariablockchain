@@ -17,7 +17,7 @@ require_once "TransactionOutput.php";
 
 
 /**
- *
+ * Methods relating to transactions
  * @author willgriffin <https://github.com/willgriffin>
  * @since 0.1.0
  */
@@ -71,6 +71,7 @@ class TransactionsController extends Object
   * @param string $raw transaction in hex form
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->decoderaw($txid);
   * </code>
@@ -106,6 +107,7 @@ class TransactionsController extends Object
   * @param boolean $forceUpdate force database update with rpc queried data
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $transaction_id = $blockchain->transactions->getId('foobar');
   * </code>
@@ -273,6 +275,7 @@ class TransactionsController extends Object
   * @param boolean $followtx if true get related transaction
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->getvout($txid);
   * </code>
@@ -350,6 +353,7 @@ class TransactionsController extends Object
   * @param stdClass $vout associative array representing vout
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->getVoutId($tx, $vout);
   * </code>
@@ -403,6 +407,7 @@ class TransactionsController extends Object
   * @param string $raw decode raw transaction and convert values to satoshi
   * @since 0.1.0
   * @return stdClass
+  *
   * <code>
   * $transaction = $blockchain->transactions->decode($raw);
   * </code>
@@ -424,6 +429,7 @@ class TransactionsController extends Object
   * @param int $n index in the transactions vout array
   * @since 0.1.0
   * @return stdClass|bool
+  *
   * <code>
   * $tx = $blockchain->transactions->fetch($txid);
   * </code>
@@ -445,6 +451,7 @@ class TransactionsController extends Object
   * @param string $txid transaction in question
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->getInfo($txid);
   * </code>
@@ -498,6 +505,7 @@ class TransactionsController extends Object
   * @param array vouts array of associated vouts to add
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->vOutScan($tx, $vouts);
   * </code>
@@ -531,6 +539,7 @@ class TransactionsController extends Object
   * @param integer distanceAway current recursion level
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->vInScan($tx, $vins, $depth);
   * </code>
@@ -557,10 +566,9 @@ class TransactionsController extends Object
   * @param boolean $refresh if true forces refreshing of entry in *memcache*, refreshing database is done with getId
   * @since 0.1.0
   * @return Transaction
+  *
   * <code>
-  * <?php
   * $address = $blockchain->addresses->get('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8', true);
-  * ?>
   * </code>
   */
   public function get($txid, $refresh = false)
@@ -587,6 +595,7 @@ class TransactionsController extends Object
   * @param int $n index in the transactions vout array
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->getvout('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
   * </code>
@@ -622,6 +631,7 @@ class TransactionsController extends Object
   * @param string $txid transaction in question
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->prune('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
   * </code>
@@ -660,6 +670,7 @@ class TransactionsController extends Object
   * @param array $args properties to mix in
   * @since 0.1.0
   * @return void
+  *
   * <code>
   * $txUnspents = $blockchain->transactions->listunspent('85b11338cfa66ff8fd05810061809a43112cfb4698687ab02cce93482379e4d8');
   * </code>

@@ -27,6 +27,7 @@ class AccountsController extends Object
   * @param MariaBlockChain\MariaBlockChain $blockchain the blockchain scope
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
   *
@@ -45,6 +46,7 @@ class AccountsController extends Object
   * @param str $account account in question
   * @since 0.1.0
   * @return int database account_id for account
+  *
   * <code>
   * <?php
   * $account_id = $blockchain->accounts->getId('foo');
@@ -69,6 +71,7 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return array associate array of ledger entries
+  *
   * <code>
   * <?php
   * $ledger = Account::getLedger('foo', [
@@ -120,6 +123,7 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return array associate array of ledger entries
+  *
   * <code>
   * <?php
   * $sents = Account::getSent('foo', [
@@ -142,6 +146,7 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return array associate array of ledger entries
+  *
   * <code>
   * <?php
   * $receiveds = Account::getReceived('foo', [
@@ -166,6 +171,7 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
   * $receivedTotal = Account::getReceivedTotal('foo', [
@@ -189,6 +195,7 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
   * $sentTotal = Account::getSentTotal('foo', [
@@ -215,9 +222,10 @@ class AccountsController extends Object
   * @param array $filters query filters
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
-  * $receivedSQL = Address::getSentSQL('mq7se9wy2egettFxPbmn99cK8v5AFq55Lx');
+  * $receivedSQL = Address::getSentSQL('1124fWAtrp31Apd35zkoYqw2jRerE97HE4');
   * ?>
   * </code>
   */

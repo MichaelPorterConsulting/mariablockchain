@@ -11,7 +11,6 @@
 
 namespace willgriffin\MariaBlockChain;
 
-require_once "BlockChain.php";
 
 /**
  * An account in a wallet

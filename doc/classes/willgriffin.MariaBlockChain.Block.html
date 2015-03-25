@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <meta charset="utf-8"/>
+    <title>API Documentation</title>
+    <meta name="author" content=""/>
+    <meta name="description" content=""/>
+
+    <link href="../css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/prism.css" rel="stylesheet" media="all"/>
+    <link href="../css/template.css" rel="stylesheet" media="all"/>
+    
+    <!--[if lt IE 9]>
+    <script src="../js/html5.js"></script>
+    <![endif]-->
+    <script src="../js/jquery-1.11.0.min.js"></script>
+    <script src="../js/ui/1.10.4/jquery-ui.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+    <script src="../js/jquery.smooth-scroll.js"></script>
+    <script src="../js/prism.min.js"></script>
+    <!-- TODO: Add http://jscrollpane.kelvinluck.com/ to style the scrollbars for browsers not using webkit-->
+    <script type="text/javascript">
+    function loadExternalCodeSnippets() {
+        Array.prototype.slice.call(document.querySelectorAll('pre[data-src]')).forEach(function (pre) {
+            var src = pre.getAttribute('data-src');
+            var extension = (src.match(/\.(\w+)$/) || [, ''])[1];
+            var language = 'php';
+
+            var code = document.createElement('code');
+            code.className = 'language-' + language;
+
+            pre.textContent = '';
+
+            code.textContent = 'Loading…';
+
+            pre.appendChild(code);
+
+            var xhr = new XMLHttpRequest();
+
+            xhr.open('GET', src, true);
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+
+                    if (xhr.status < 400 && xhr.responseText) {
+                        code.textContent = xhr.responseText;
+
+                        Prism.highlightElement(code);
+                    }
+                    else if (xhr.status >= 400) {
+                        code.textContent = '✖ Error ' + xhr.status + ' while fetching file: ' + xhr.statusText;
+                    }
+                    else {
+                        code.textContent = '✖ Error: File does not exist or is empty';
+                    }
+                }
+            };
+
+            xhr.send(null);
+        });
+    }
+
+    $(document).ready(function(){
+        loadExternalCodeSnippets();
+    });
+    $('#source-view').on('shown', function () {
+        loadExternalCodeSnippets();
+    })
+</script>
+
+    <link rel="shortcut icon" href="../images/favicon.ico"/>
+    <link rel="apple-touch-icon" href="../images/apple-touch-icon.png"/>
+    <link rel="apple-touch-icon" sizes="72x72" href="../images/apple-touch-icon-72x72.png"/>
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon-114x114.png"/>
+</head>
+<body>
+
+<div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <i class="icon-ellipsis-vertical"></i>
+            </a>
+            <a class="brand" href="../index.html">API Documentation</a>
+
+            <div class="nav-collapse">
+                <ul class="nav pull-right">
+                                        <li class="dropdown">
+                        <a href="../index.html" class="dropdown-toggle" data-toggle="dropdown">
+                            API Documentation <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                                                        <li><a href="../namespaces/willgriffin.html">\willgriffin</a></li>
+                                                    </ul>
+                    </li>
+                                        <li class="dropdown" id="charts-menu">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Charts <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="../graphs/class.html">
+                                    <i class="icon-list-alt"></i>&#160;Class hierarchy diagram
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown" id="reports-menu">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            Reports <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="../reports/errors.html">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <i class="icon-list-alt"></i>&#160;Errors <span class="label label-info pull-right">33</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="../reports/markers.html">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <i class="icon-list-alt"></i>&#160;Markers <span class="label label-info pull-right">0</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="../reports/deprecated.html">
+                                                                                                            <i class="icon-list-alt"></i>&#160;Deprecated <span class="label label-info pull-right">0</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--<div class="go_to_top">-->
+    <!--<a href="#___" style="color: inherit">Back to top&#160;&#160;<i class="icon-upload icon-white"></i></a>-->
+    <!--</div>-->
+</div>
+
+<div id="___" class="container-fluid">
+        <section class="row-fluid">
+        <div class="span2 sidebar">
+                                <div class="accordion" style="margin-bottom: 0">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                                    <a class="accordion-toggle " data-toggle="collapse" data-target="#namespace-1753430783"></a>
+                                <a href="../namespaces/default.html" style="margin-left: 30px; padding-left: 0">\</a>
+            </div>
+            <div id="namespace-1753430783" class="accordion-body collapse in">
+                <div class="accordion-inner">
+
+                                                    <div class="accordion" style="margin-bottom: 0">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-2086307593"></a>
+                                <a href="../namespaces/willgriffin.html" style="margin-left: 30px; padding-left: 0">willgriffin</a>
+            </div>
+            <div id="namespace-2086307593" class="accordion-body collapse ">
+                <div class="accordion-inner">
+
+                                                    <div class="accordion" style="margin-bottom: 0">
+        <div class="accordion-group">
+            <div class="accordion-heading">
+                                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#namespace-426219906"></a>
+                                <a href="../namespaces/willgriffin.MariaBlockChain.html" style="margin-left: 30px; padding-left: 0">MariaBlockChain</a>
+            </div>
+            <div id="namespace-426219906" class="accordion-body collapse ">
+                <div class="accordion-inner">
+
+                    
+                    <ul>
+                                                                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Account.html">Account</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.AccountsController.html">AccountsController</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Address.html">Address</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.AddressesController.html">AddressesController</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Block.html">Block</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.BlocksController.html">BlocksController</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Common.html">Common</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.MariaBlockChain.html">MariaBlockChain</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Object.html">Object</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.Transaction.html">Transaction</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.TransactionInput.html">TransactionInput</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.TransactionOutput.html">TransactionOutput</a></li>
+                                                    <li class="class"><a href="../classes/willgriffin.MariaBlockChain.TransactionsController.html">TransactionsController</a></li>
+                                            </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                    
+                    <ul>
+                                                                                            </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                    
+                    <ul>
+                                                                                            </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        </div>
+    </section>
+    <section class="row-fluid">
+        <div class="span10 offset2">
+            <div class="row-fluid">
+                <div class="span8 content class">
+                    <nav>
+                                                <a href="../namespaces/willgriffin.MariaBlockChain.html">\willgriffin\MariaBlockChain</a> <i class="icon-level-up"></i>
+                                            </nav>
+                    <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal"><i class="icon-code"></i></a>
+
+                    <h1><small>\willgriffin\MariaBlockChain</small>Block</h1>
+                    <p><em>Methods common to all classes</em></p>
+                    
+                    
+                                        
+                    <section id="summary">
+                        <h2>Summary</h2>
+                        <section class="row-fluid heading">
+                            <section class="span4">
+                                <a href="#methods">Methods</a>
+                            </section>
+                            <section class="span4">
+                                <a href="#properties">Properties</a>
+                            </section>
+                            <section class="span4">
+                                <a href="#constants">Constants</a>
+                            </section>
+                        </section>
+                        <section class="row-fluid public">
+                            <section class="span4">
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method___construct" class="">__construct()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#method_trace" class="">trace()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#method_error" class="">error()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_toBtc" class="">toBtc()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_toSatoshi" class="">toSatoshi()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_emit" class="">emit()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_hasHook" class="">hasHook()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_hook" class="">hook()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#method_prepDate" class="">prepDate()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method___get" class="">__get()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method___toString" class="">__toString()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method_json" class="">json()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method_stdClass" class="">stdClass()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method_toArray" class="">toArray()</a><br />
+                                                            </section>
+                            <section class="span4">
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#property_bc" class="">$bc</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#property_rpc" class="">$rpc</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#property_db" class="">$db</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#property_cache" class="">$cache</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_hash" class="">$hash</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_confirmations" class="">$confirmations</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_size" class="">$size</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_height" class="">$height</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_version" class="">$version</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_merkleroot" class="">$merkleroot</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_time" class="">$time</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_nonce" class="">$nonce</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_bits" class="">$bits</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_difficulty" class="">$difficulty</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_chainwork" class="">$chainwork</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_previousblockhash" class="">$previousblockhash</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_nextblockhash" class="">$nextblockhash</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property_tx" class="">$tx</a><br />
+                                                            </section>
+                            <section class="span4">
+                                                                    <em>No constants found</em>
+                                                            </section>
+                        </section>
+                        <section class="row-fluid protected">
+                            <section class="span4">
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#method_updateCached" class="">updateCached()</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Object.html#method_wipeCached" class="">wipeCached()</a><br />
+                                                            </section>
+                            <section class="span4">
+                                                                    <em>No protected properties found</em>
+                                                            </section>
+                            <section class="span4">
+                                <em>N/A</em>
+                            </section>
+                        </section>
+                        <section class="row-fluid private">
+                            <section class="span4">
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#method__loadArray" class="">_loadArray()</a><br />
+                                                            </section>
+                            <section class="span4">
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Common.html#property__hooks" class="">$_hooks</a><br />
+                                                                    <a href="../classes/willgriffin.MariaBlockChain.Block.html#property__vars" class="">$_vars</a><br />
+                                                            </section>
+                            <section class="span4">
+                                <em>N/A</em>
+                            </section>
+                        </section>
+                    </section>
+                </div>
+                <aside class="span4 detailsbar">
+                                        
+                    
+                    <dl>
+                        <dt>File</dt>
+                            <dd><a href="../files/Block.html"><div class="path-wrapper">Block.php</div></a></dd>
+                                                <dt>Package</dt>
+                            <dd><div class="namespace-wrapper">MariaBlockChain</div></dd>
+                                                <dt>Class hierarchy</dt>
+                            <dd class="hierarchy">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                                        <div class="namespace-wrapper"><a href="../classes/willgriffin.MariaBlockChain.Common.html">\willgriffin\MariaBlockChain\Common</a></div>
+                                                                    
+                                        <div class="namespace-wrapper"><a href="../classes/willgriffin.MariaBlockChain.Object.html">\willgriffin\MariaBlockChain\Object</a></div>
+                                                                                                    <div class="namespace-wrapper">\willgriffin\MariaBlockChain\Block</div>
+                            </dd>
+
+                        
+                        
+                        
+                        
+                                                                        </dl>
+                    <h2>Tags</h2>
+                    <table class="table table-condensed">
+                                            <tr>
+                            <th>
+                                author
+                            </th>
+                            <td>
+                                                                    <p>willgriffin <a href="https://github.com/willgriffin">https://github.com/willgriffin</a></p>
+                                                            </td>
+                        </tr>
+                                            <tr>
+                            <th>
+                                since
+                            </th>
+                            <td>
+                                                                    
+                                                            </td>
+                        </tr>
+                                        </table>
+                </aside>
+            </div>
+
+                        
+                                    <a id="properties" name="properties"></a>
+            <div class="row-fluid">
+                <div class="span8 content class">
+                    <h2>Properties</h2>
+                </div>
+                <aside class="span4 detailsbar"></aside>
+            </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_bc" name="property_bc" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$bc</h3>
+                <pre class="signature">$bc : \willgriffin\MariaBlockChain\MariaBlockChain</pre>
+                <p><em>blockchain</em></p>
+                
+
+                                <h4>Type</h4>
+                <a href="../classes/willgriffin.MariaBlockChain.MariaBlockChain.html">\willgriffin\MariaBlockChain\MariaBlockChain</a>
+                &mdash; blockchain the object is part of                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_rpc" name="property_rpc" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$rpc</h3>
+                <pre class="signature">$rpc : \nbobtc\bitcoind</pre>
+                <p><em>alias to bc-&gt;rpc</em></p>
+                
+
+                                <h4>Type</h4>
+                \nbobtc\bitcoind
+                &mdash; rpc connection                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_db" name="property_db" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$db</h3>
+                <pre class="signature">$db : \MariaInterface\MariaInterface</pre>
+                <p><em>alias to bc-&gt;db</em></p>
+                
+
+                                <h4>Type</h4>
+                \MariaInterface\MariaInterface
+                &mdash; database interface                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_cache" name="property_cache" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$cache</h3>
+                <pre class="signature">$cache : \Memcache</pre>
+                <p><em>alias to bc-&gt;cache</em></p>
+                
+
+                                <h4>Type</h4>
+                \Memcache
+                &mdash; memcache                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_hash" name="property_hash" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$hash</h3>
+                <pre class="signature">$hash : string</pre>
+                <p><em>block hash</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_confirmations" name="property_confirmations" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$confirmations</h3>
+                <pre class="signature">$confirmations : integer</pre>
+                <p><em>confirmations</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_size" name="property_size" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$size</h3>
+                <pre class="signature">$size : float</pre>
+                <p><em>size</em></p>
+                
+
+                                <h4>Type</h4>
+                float
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_height" name="property_height" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$height</h3>
+                <pre class="signature">$height : integer</pre>
+                <p><em>height</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_version" name="property_version" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$version</h3>
+                <pre class="signature">$version : integer</pre>
+                <p><em>version</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_merkleroot" name="property_merkleroot" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$merkleroot</h3>
+                <pre class="signature">$merkleroot : string</pre>
+                <p><em>merkleroot</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_time" name="property_time" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$time</h3>
+                <pre class="signature">$time : integer</pre>
+                <p><em>time</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_nonce" name="property_nonce" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$nonce</h3>
+                <pre class="signature">$nonce : integer</pre>
+                <p><em>nonce</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_bits" name="property_bits" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$bits</h3>
+                <pre class="signature">$bits : integer</pre>
+                <p><em>bits</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_difficulty" name="property_difficulty" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$difficulty</h3>
+                <pre class="signature">$difficulty : integer</pre>
+                <p><em>difficulty</em></p>
+                
+
+                                <h4>Type</h4>
+                integer
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_chainwork" name="property_chainwork" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$chainwork</h3>
+                <pre class="signature">$chainwork : string</pre>
+                <p><em>chainwork</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_previousblockhash" name="property_previousblockhash" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$previousblockhash</h3>
+                <pre class="signature">$previousblockhash : string</pre>
+                <p><em>previousblockhash</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_nextblockhash" name="property_nextblockhash" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$nextblockhash</h3>
+                <pre class="signature">$nextblockhash : string</pre>
+                <p><em>nextblockhash</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property_tx" name="property_tx" class="anchor"></a>
+            <article class="property">
+                <h3 class="public ">$tx</h3>
+                <pre class="signature">$tx : string</pre>
+                <p><em>tx</em></p>
+                
+
+                                <h4>Type</h4>
+                string
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property__hooks" name="property__hooks" class="anchor"></a>
+            <article class="property">
+                <h3 class="private ">$_hooks</h3>
+                <pre class="signature">$_hooks : array</pre>
+                <p><em>_hooks</em></p>
+                
+
+                                <h4>Type</h4>
+                array
+                &mdash; associative array with event name as keys and array of hooks attach as value iirc                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="property__vars" name="property__vars" class="anchor"></a>
+            <article class="property">
+                <h3 class="private ">$_vars</h3>
+                <pre class="signature">$_vars : array</pre>
+                <p><em>__get &amp;&amp; __set storage</em></p>
+                
+
+                                <h4>Type</h4>
+                array
+                                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                        <dl>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                            
+                                    <a id="methods" name="methods"></a>
+            <div class="row-fluid">
+                <div class="span8 content class"><h2>Methods</h2></div>
+                <aside class="span4 detailsbar"></aside>
+            </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method___construct" name="method___construct" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">__construct()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">__construct(\willgriffin\MariaBlockChain\MariaBlockChain\MariaBlockChain  <span class="argument">$blockchain</span>, integer|string|array  <span class="argument">$b</span>) : void</pre>
+                <p><em>constructor</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>\willgriffin\MariaBlockChain\MariaBlockChain\MariaBlockChain</td>
+                                <td>$blockchain </td>
+                                <td><p>the blockchain scope</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>integer|string|array</td>
+                                <td>$b </td>
+                                <td><p>a block_id|blockhash|array to load the block from</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>__construct</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_trace" name="method_trace" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">trace()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">trace(string  <span class="argument">$msg</span>) : void</pre>
+                <p><em>take note of something</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$msg </td>
+                                <td><p>trace message</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>msg</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_error" name="method_error" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">error()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">error(string  <span class="argument">$msg</span>) : void</pre>
+                <p><em>handles a error</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$msg </td>
+                                <td><p>error message</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>msg</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_toBtc" name="method_toBtc" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">toBtc()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">toBtc(float  <span class="argument">$satoshi</span>) : float</pre>
+                <p><em>convert from satoshi to btc</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>float</td>
+                                <td>$satoshi </td>
+                                <td><p>amount of satoshi to convert</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    float
+                                            &mdash; <p><code>
+$block = self::toBtc(161803399);
+</code></p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>toSatoshi</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_toSatoshi" name="method_toSatoshi" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">toSatoshi()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">toSatoshi(float  <span class="argument">$btc</span>) : integer</pre>
+                <p><em>convert from btc to satoshi</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>float</td>
+                                <td>$btc </td>
+                                <td><p>amount of btc to convert</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    integer
+                                            &mdash; <p><code>
+$block = self::toSatoshi(1.61803399);
+</code></p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>toSatoshi</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_emit" name="method_emit" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">emit()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">emit(string  <span class="argument">$event</span>, mixed  <span class="argument">$args = false</span>) : void</pre>
+                <p><em>emit an event</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$event </td>
+                                <td><p>event to emit</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>mixed</td>
+                                <td>$args </td>
+                                <td><p>data relating to this instance of the event</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>emit</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_hasHook" name="method_hasHook" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">hasHook()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">hasHook(string  <span class="argument">$event</span>) : boolean</pre>
+                <p><em>see if an event has any hooks attached</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$event </td>
+                                <td><p>event to check</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    boolean
+                                            &mdash; <p><code>
+$block = $blockchain-&gt;block-&gt;get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
+</code></p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>hasHook</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_hook" name="method_hook" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">hook()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">hook(string  <span class="argument">$event</span>, \willgriffin\MariaBlockChain\function  <span class="argument">$method</span>) : void</pre>
+                <p><em>hook a function to an event</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$event </td>
+                                <td><p>event name</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>\willgriffin\MariaBlockChain\function</td>
+                                <td>$method </td>
+                                <td><p>method to run on event</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>hook</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_prepDate" name="method_prepDate" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">prepDate()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">prepDate(\willgriffin\MariaBlockChain\str  <span class="argument">$dateStr</span>, \willgriffin\MariaBlockChain\str  <span class="argument">$setTime = false</span>) : string</pre>
+                <p><em>Takes in a date, represented however, gets it sql friendly. Optionally sets the time to beginning or end of the day.</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>\willgriffin\MariaBlockChain\str</td>
+                                <td>$dateStr </td>
+                                <td><p>address in question</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>\willgriffin\MariaBlockChain\str</td>
+                                <td>$setTime </td>
+                                <td><p>additional filters</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    string
+                                            &mdash; <p><code>
+$sent = $blockchain-&gt;addresses-&gt;getUnspentTotal(
+'1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
+['startDate' =&gt; &quot;2013-03-13&quot;, 'endDate' =&gt; &quot;2015-03-13&quot; ]);
+</code></p>
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Common.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Common</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>prepDate</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method___get" name="method___get" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">__get()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">__get(string  <span class="argument">$var</span>) : mixed</pre>
+                <p><em>lazy loaded variables, probably dumb and *should* by now be completely
+phased out in favour of BlocksController methods</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$var </td>
+                                <td><p>variable to retrieve</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                                    <h4>Returns</h4>
+                    mixed
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>__get</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method___toString" name="method___toString" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">__toString()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">__toString() : string</pre>
+                <p><em>returns blockhash if request as string</em></p>
+                
+
+                
+                
+                                    <h4>Returns</h4>
+                    string
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>__toString</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_json" name="method_json" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">json()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">json() : string</pre>
+                <p><em>returns json representation of block</em></p>
+                
+
+                
+                
+                                    <h4>Returns</h4>
+                    string
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>json</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_stdClass" name="method_stdClass" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">stdClass()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">stdClass() : \willgriffin\MariaBlockChain\stdClass</pre>
+                <p><em>as a stdClass</em></p>
+                
+
+                
+                
+                                    <h4>Returns</h4>
+                    \willgriffin\MariaBlockChain\stdClass
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>stdClass</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_toArray" name="method_toArray" class="anchor"></a>
+            <article class="method">
+                <h3 class="public ">toArray()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">toArray() : \willgriffin\MariaBlockChain\stdClass</pre>
+                <p><em>array for serializing</em></p>
+                
+
+                
+                
+                                    <h4>Returns</h4>
+                    \willgriffin\MariaBlockChain\stdClass
+                                    				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>toArray</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_updateCached" name="method_updateCached" class="anchor"></a>
+            <article class="method">
+                <h3 class="protected ">updateCached()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">updateCached(string  <span class="argument">$what</span>, mixed  <span class="argument">$data</span>) : void</pre>
+                <p><em>caches a serialized object</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$what </td>
+                                <td><p>storage key</p></td>
+                            </tr>
+                                                    <tr>
+                                <td>mixed</td>
+                                <td>$data </td>
+                                <td><p>storage value</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>updateCached</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method_wipeCached" name="method_wipeCached" class="anchor"></a>
+            <article class="method">
+                <h3 class="protected ">wipeCached()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">wipeCached(string  <span class="argument">$what</span>) : void</pre>
+                <p><em>clears an entry from the cache</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td>string</td>
+                                <td>$what </td>
+                                <td><p>storage key to clear</p></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                    <dt>Inherited from</dt>
+                    <dd><a href="../classes/willgriffin.MariaBlockChain.Object.html"><div class="path-wrapper">\willgriffin\MariaBlockChain\Object</div></a></dd>
+                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>wipeCached</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                                    <div class="row-fluid">
+        <div class="span8 content class">
+            <a id="method__loadArray" name="method__loadArray" class="anchor"></a>
+            <article class="method">
+                <h3 class="private ">_loadArray()</h3>
+                <a href="#source-view" role="button" class="pull-right btn" data-toggle="modal" style="font-size: 1.1em; padding: 9px 14px"><i class="icon-code"></i></a>
+                <pre class="signature" style="margin-right: 54px;">_loadArray(  <span class="argument">$arr</span>) : void</pre>
+                <p><em>load from array</em></p>
+                
+
+                                    <h4>Parameters</h4>
+                    <table class="table table-condensed table-hover">
+                                                    <tr>
+                                <td></td>
+                                <td>$arr </td>
+                                <td></td>
+                            </tr>
+                                            </table>
+                
+                
+                				
+                            </article>
+        </div>
+        <aside class="span4 detailsbar">
+            <h1><i class="icon-arrow-down"></i></h1>
+                                                            <dl>
+                                                                            </dl>
+            <h2>Tags</h2>
+            <table class="table table-condensed">
+                                    <tr>
+                        <th>
+                            name
+                        </th>
+                        <td>
+                                                                                            <p>_loadArray</p>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <th>
+                            since
+                        </th>
+                        <td>
+                                                            0.1.0                                
+                                                    </td>
+                    </tr>
+                            </table>
+        </aside>
+    </div>
+
+                                    </div>
+    </section>
+
+    <div id="source-view" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="source-view-label" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="source-view-label">Block.php</h3>
+        </div>
+        <div class="modal-body">
+            <pre data-src="../files/Block.php.txt" class="language-php line-numbers"></pre>
+        </div>
+    </div>
+
+    <footer class="row-fluid">
+        <section class="span10 offset2">
+            <section class="row-fluid">
+                <section class="span10 offset1">
+                    <section class="row-fluid footer-sections">
+                        <section class="span4">
+                                                        <h1><i class="icon-code"></i></h1>
+                            <div>
+                                <ul>
+                                                                            <li><a href="../namespaces/willgriffin.html">\willgriffin</a></li>
+                                                                    </ul>
+                            </div>
+                        </section>
+                        <section class="span4">
+                                                        <h1><i class="icon-bar-chart"></i></h1>
+                            <div>
+                                <ul>
+                                    <li><a href="../graphs/class.html">Class Hierarchy Diagram</a></li>
+                                </ul>
+                            </div>
+                        </section>
+                        <section class="span4">
+                                                        <h1><i class="icon-pushpin"></i></h1>
+                            <div>
+                                <ul>
+                                    <li><a href="../reports/errors.html">Errors</a></li>
+                                    <li><a href="../reports/markers.html">Markers</a></li>
+                                </ul>
+                            </div>
+                        </section>
+                    </section>
+                </section>
+            </section>
+            <section class="row-fluid">
+                <section class="span10 offset1">
+                    <hr />
+                    Documentation is powered by <a href="http://www.phpdoc.org/">phpDocumentor </a> and authored
+                    on March 25th, 2015 at 15:06.
+                </section>
+            </section>
+        </section>
+    </footer>
+</div>
+
+</body>
+</html>

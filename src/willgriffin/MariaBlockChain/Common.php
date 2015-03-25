@@ -1,6 +1,6 @@
 <?php
 /**
- * Common
+ * Common methods
  * @package MariaBlockChain
  * @version 0.1.0
  * @link https://github.com/willgriffin/mariablockchain
@@ -12,7 +12,7 @@
 namespace willgriffin\MariaBlockChain;
 
 /**
- *
+ * Methods common to all classes
  * @author willgriffin <https://github.com/willgriffin>
  * @since 0.1.0
  */
@@ -31,10 +31,9 @@ class Common {
   * @param float $satoshi amount of satoshi to convert
   * @since 0.1.0
   * @return float
+  *
   * <code>
-  * <?php
   * $block = self::toBtc(161803399);
-  * ?>
   * </code>
   */
   public function toBtc($satoshi)
@@ -63,10 +62,9 @@ class Common {
     * @param float $btc amount of btc to convert
     * @since 0.1.0
     * @return int
+    *
     * <code>
-    * <?php
     * $block = self::toSatoshi(1.61803399);
-    * ?>
     * </code>
     */
     public function toSatoshi($btc) {
@@ -92,10 +90,9 @@ class Common {
   * @param mixed $args data relating to this instance of the event
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function emit( $event, $args = false )
@@ -117,10 +114,9 @@ class Common {
   * @param string $event event to check
   * @since 0.1.0
   * @return boolean
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function hasHook($event)
@@ -139,10 +135,9 @@ class Common {
   * @param function $method method to run on event
   * @since 0.1.0
   * @return void
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function hook($event, $method)
@@ -157,10 +152,9 @@ class Common {
   * @param string value amount to round
   * @since 0.1.0
   * @return \MariaBlockChain\Block
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   // public function round($value)
@@ -183,9 +177,10 @@ class Common {
   * @param str $setTime additional filters
   * @since 0.1.0
   * @return string
+  *
   * <code>
   * $sent = $blockchain->addresses->getUnspentTotal(
-  *   'mq7se9wy2egettFxPbmn99cK8v5AFq55Lx',
+  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
   *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
   * </code>
   */
@@ -220,8 +215,4 @@ class Common {
       $this->error('invalid date passed'); //should never happen in production without someone fucking around
     }
   }
-
-
-
-
 }

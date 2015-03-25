@@ -11,7 +11,7 @@
 
 namespace willgriffin\MariaBlockChain;
 
-require_once "Transaction.php";
+require_once "Object.php";
 
 /**
  *

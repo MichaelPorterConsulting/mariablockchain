@@ -11,18 +11,18 @@
 
 namespace willgriffin\MariaBlockChain;
 
-require_once "BlockChain.php";
+require_once "Object.php";
 
 /**
- *
+ * A bitcoin based address
  * @author willgriffin <https://github.com/willgriffin>
  * @since 0.1.0
  */
 class Address extends Object {
 
   /**
-  * A sample parameter
-  * @var int $myParam This is my parameter
+  * storage for the dynamically loaded 'address_id' property
+  * @var int $_address_id primary key in the database
   * @since 0.1.0
   */
   protected $_address_id;
@@ -83,6 +83,7 @@ class Address extends Object {
   * @param array $args additional arguments and overrides
   * @since 0.1.0
   * @return object
+  *
   * <code>
   * <?php
   *
@@ -111,6 +112,7 @@ class Address extends Object {
   * @param str $var variable to retrieve
   * @since 0.1.0
   * @return mixed
+  *
   * <code>
   * <?php
   *
@@ -147,6 +149,7 @@ class Address extends Object {
   * @param str $var variable to retrieve
   * @since 0.1.0
   * @return str $this->address
+  *
   * <code>
   * <?php
   *

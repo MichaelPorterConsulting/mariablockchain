@@ -75,7 +75,7 @@ class TransactionInput  extends Object
     if (is_array($args) || ($args instanceof \stdClass)) {
       $this->_loadArray($args);
     } else {
-      $this->error("tried to initialze TransactionInput with invalid arguments")
+      $this->error("tried to initialze TransactionInput with invalid arguments");
     }
   }
 

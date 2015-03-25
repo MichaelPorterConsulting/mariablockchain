@@ -40,10 +40,9 @@ class BlocksController extends Object
   * @param string|stdClass $block either blockhash or stdClass as returned by rpc to get id for
   * @since 0.1.0
   * @return int database primary key for block
+  *
   * <code>
-  * <?php
   * $address_id = $blockchain->blocks->getId('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function getId($block)
@@ -190,10 +189,9 @@ class BlocksController extends Object
   * @param boolean $refresh if true forces refreshing of entry in cache
   * @since 0.1.0
   * @return \MariaBlockChain\Block
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function get($blockhash, $refresh = false)
@@ -220,10 +218,9 @@ class BlocksController extends Object
   * @param string blockhash block hash
   * @since 0.1.0
   * @return \MariaBlockChain\Block
+  *
   * <code>
-  * <?php
   * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * ?>
   * </code>
   */
   public function getInfo($blockhash)

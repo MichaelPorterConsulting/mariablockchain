@@ -6,11 +6,13 @@ About
 
 A relational database representation of related bitcoin based blockchain records.
 
-This libraries functions that make use of indexes (most of the fun stuff) are only as accurate as the records stored in the database.
+This library's functions that make use of indexes (most of the fun stuff) are only as accurate as the records stored in the database.
 
 What this means is that to be of any value, either use the bitcoind rpc 'wallet' trigger to teach it about a transaction to be
 accurate for your wallet, or use the 'block' trigger event to parse every block. A combination of both insures accuracy for any
 address and immediacy of awareness of in-wallet transactions.
+
+Use the bitcoind rpc 'wallet' trigger to secure accuracy for your wallet, or, use the 'block' trigger to parse every block for total accuracy. A combination of both will ensure accuracy for any address and your in-wallet transactions will become immediately aware. It's not recommended to use this library as it stands to parse the entire blockchain... yet
 
 URL: [https://github.com/willgriffin/mariablockchain](https://github.com/willgriffin/mariablockchain)
 
@@ -69,8 +71,13 @@ This project uses the following as development dependencies:
 License
 --------------
 
-[License](https://github.com/willgriffin/mariablockchain/blob/master/LICENSE)
+Copyright (c) 2013 will griffin
 
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Donate
 -------------

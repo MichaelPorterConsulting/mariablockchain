@@ -172,6 +172,7 @@ class Common {
 
   /**
   * Takes in a date, represented however, gets it sql friendly. Optionally sets the time to beginning or end of the day.
+  * only as smart as strtotime
   * @name prepDate
   * @param str $dateStr address in question
   * @param str $setTime additional filters
@@ -179,14 +180,12 @@ class Common {
   * @return string
   *
   * <code>
-  * $sent = $blockchain->addresses->getUnspentTotal(
-  *   '1124fWAtrp31Apd35zkoYqw2jRerE97HE4',
-  *   ['startDate' => "2013-03-13", 'endDate' => "2015-03-13" ]);
+  * $sent = $blockchain->addresses->prepDate('April 20, 2005');
+  * $sent = $blockchain->addresses->prepDate($timestamp);
   * </code>
   */
   public function prepDate($dateStr, $setTime = false)
   {
-    //$this->trace(__METHOD__);
 
     if (!is_numeric($dateStr)) {
       $dateInt = strtotime($dateStr);
@@ -210,9 +209,50 @@ class Common {
         break;
       }
 
-      return date("Y-m-d H:i:s", $dateInt);
+      return date("Y-m-d $timeStr", $dateInt);
     } else {
-      $this->error('invalid date passed'); //should never happen in production without someone fucking around
+      $this->error("invalid date $dateStr"); //should never happen in production without someone fucking around
     }
   }
+
+
+
+    /**
+    * take note of something
+    * @name msg
+    * @param string $msg trace message
+    * @since 0.1.0
+    * @return void
+    *
+    * <code>
+    * self::error('it happened');
+    * </code>
+    */
+    public function trace( $msg )
+    {
+      if ($this->hasHook( 'trace' )) {
+        $this->emit( 'trace', $msg );
+      }
+    }
+
+    /**
+    * handles a error
+    * @name msg
+    * @param string $msg error message
+    * @since 0.1.0
+    * @return void
+    *
+    * <code>
+    * self::error('it hit the fan');
+    * </code>
+    */
+    public function error( $msg )
+    {
+      if ($this->hasHook( 'error' )) {
+        $this->emit('error', $msg);
+      } else {
+        throw new \Exception($msg);
+      }
+    }
+
 }

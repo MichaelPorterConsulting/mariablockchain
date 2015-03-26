@@ -4,11 +4,9 @@ use willgriffin\MariaBlockChain\MariaBlockChain as MariaBlockChain;
 
 class MariaBlockChainTest extends PHPUnit_Framework_TestCase
 {
-	public function testCanBeNegated () {
-
-
-		$this->assertEquals(true, true); //no parse errors at least :p
+	//todo: moar
+	public function testParses () {
+		$this->assertEquals(true, true);
 	}
 
 }
-?>

@@ -65,46 +65,6 @@ class Object extends Common {
   }
 
   /**
-  * take note of something
-  * @name msg
-  * @param string $msg trace message
-  * @since 0.1.0
-  * @return void
-  *
-  * <code>
-  * self::error('it happened');
-  * </code>
-  */
-  public function trace( $msg )
-  {
-    if ($this->hasHook( 'trace' )) {
-      $this->emit( 'trace', $msg );
-    } else if ($this->bc) {
-      $this->bc->trace( $msg );
-    }
-  }
-
-  /**
-  * handles a error
-  * @name msg
-  * @param string $msg error message
-  * @since 0.1.0
-  * @return void
-  *
-  * <code>
-  * self::error('it hit the fan');
-  * </code>
-  */
-  public function error( $msg )
-  {
-    if ($this->hasHook( 'error' )) {
-      $this->emit( 'error', $msg );
-    } else {
-      $this->bc->error( $msg );
-    }
-  }
-
-  /**
   * caches a serialized object
   * @name updateCached
   * @param string $what storage key

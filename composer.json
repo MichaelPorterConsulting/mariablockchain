@@ -19,6 +19,9 @@
 	},
 	"license": "MIT",
 	"type": "library",
+	"autoload": {
+		"psr-4": { "willgriffin\\MariaBlockChain\\": "src/" }
+	},
 	"require": {
 		"php": ">=5.3.0",
 		"monolog/monolog": "1.*",
@@ -26,7 +29,6 @@
 		"nbobtc/bitcoind-php": "~1.2@dev",
 		"bitwasp/bitcoin-lib": "dev-master"
 	},
-
 	"require-dev": {
 		"phpdocumentor/phpdocumentor": "2.*",
 		"phpunit/phpunit": "3.*",

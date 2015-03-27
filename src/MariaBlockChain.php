@@ -14,8 +14,8 @@ namespace willgriffin\MariaBlockChain;
 require(dirname(dirname(dirname(dirname(__FILE__)))) . '/vendor/autoload.php');
 
 require_once "Object.php";
-require_once "AddressesController.php";
 require_once "AccountsController.php";
+require_once "AddressesController.php";
 require_once "TransactionsController.php";
 require_once "BlocksController.php";
 

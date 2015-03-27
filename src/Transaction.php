@@ -99,12 +99,13 @@ class Transaction extends Object {
   */
   public $time;
   //
-  // /**
-  // *
-  // * @var int $
-  // * @since 0.1.0
-  // */
-  // public $timereceived;
+  /**
+  * when the system first finds out about the transaction, only handy
+  * for transactions not already accepted to a block
+  * @var int $timereceived
+  * @since 0.1.0
+  */
+  public $timereceived;
 
   /**
   *

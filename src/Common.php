@@ -102,7 +102,7 @@ class Common {
         if (is_callable($hook)) {
           call_user_func($hook, $args);
         } else {
-          throw new \Execption("hook defined is not callable $event");
+          throw new \Exception("hook defined is not callable $event");
         }
       }
     }
@@ -145,29 +145,28 @@ class Common {
     $this->_hooks[$event][] = $method;
   }
 
-
   /**
-  * dumb, redundant -- toast
-  * @name round
-  * @param string value amount to round
+  * Adopts the basic hooks (trace, error) of another object
+  * @name prepDate
   * @since 0.1.0
-  * @return \MariaBlockChain\Block
-  *
-  * <code>
-  * $block = $blockchain->block->get('00000000000000000400d9582bab30043c7f582892f234fedf7cc5cea88107af');
-  * </code>
+  * @return void
+  * @param object $what
   */
-  // public function round($value)
-  // {
-  //   return round($value * 1e8) / 1e8;
-  // }
+  public function adoptDefaultHooks($what)
+  {
 
+    $traceFunction = function($msg) use ($what) {
+      $what->trace($msg);
+    };
 
+    $errorFunction = function($msg) use ($what) {
+      $what->trace($msg);
+    };
 
+    $this->hook('trace', $traceFunction);
+    $this->hook('error', $errorFunction);
 
-
-
-
+  }
 
 
   /**

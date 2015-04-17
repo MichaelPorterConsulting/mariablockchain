@@ -83,4 +83,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 Donate
 -------------
-[1124fWAtrp31Apd35zkoYqw2jRerE97HE4](https://coink.it/#!/1124fWAtrp31Apd35zkoYqw2jRerE97HE4)
+[1124fWAtrp31Apd35zkoYqw2jRerE97HE4](https://coink.it/kY)

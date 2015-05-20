@@ -11,7 +11,7 @@ use BitWasp\Bitcoin\Bitcoin;
 use BitWasp\Bitcoin\Script\OutputScriptFactory;
 use \willgriffin\MariaInterface\MariaInterface;
 
-$configFile = (count($argv) > 1) ? $argv[2] : false;
+$configFile = (count($argv) > 1) ? $argv[1] : false;
 $x = (count($argv) > 2) ? intval($argv[2]) : 1;
 $math = new Math();
 $difficulty = new Difficulty($math);

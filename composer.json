@@ -41,6 +41,6 @@
 		"url": "https://github.com/willgriffin/bitcoind-php"
 	}, {
 		"type": "vcs",
-		"url": "https://github.com/willgriffin/bitcoin"
+		"url": "https://github.com/willgriffin/bitcoin-php"
 	}]
 }

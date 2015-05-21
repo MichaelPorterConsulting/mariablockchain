@@ -9,6 +9,10 @@ use BitWasp\Bitcoin\Math\Math;
 use BitWasp\Bitcoin\Network\NetworkFactory;
 use BitWasp\Bitcoin\Bitcoin;
 use BitWasp\Bitcoin\Script\OutputScriptFactory;
+
+use BitWasp\Bitcoin\Script\ScriptFactory;
+use BitWasp\Buffertools\Buffer;
+
 use \willgriffin\MariaInterface\MariaInterface;
 
 $configFile = (count($argv) > 1) ? $argv[1] : false;
@@ -168,10 +172,21 @@ if (file_exists($configFile)) {
       for ($o = 0; $o < $outputs->count(); $o++) {
 
         $output = $outputs->getOutput($o);
-        $outputScript = $output->getScript();
-        $outputType = OutputScriptFactory::classify($outputScript)->classify();
+
+        $rawData = $output->getScript()->getHex();
+        $rawSize = strlen($rawData);
+        $hexgz = gzcompress($rawData);
+
+        if ($rawSize > 8192) { //todo: not sure about this as a threshold, bandaid anyways
+          $outputType = 'sketchy'; //todo: will have to find all the 'sketchy' outputs and figure out how to deal
+                                   // with them at a later date, some might be legit
+        } else {
+          $outputScript = $output->getScript();
+          $outputType = OutputScriptFactory::classify($outputScript)->classify();
+        }
+
         if ($outputType === 'multisig') {
-          $reqSigs = -1; // tag for now
+          $reqSigs = -1; //todo: figure out and fix
         } else {
           $reqSigs = 1;
         }
@@ -181,39 +196,48 @@ if (file_exists($configFile)) {
         $voutIdFlds = ['ii', $transaction_id, $o];
         $vout_id = $db->value($voutIdSQL, $voutIdFlds);
 
-        $voFlds = ['isiissis',
+        $voFlds = ['isiisis',
           $transaction_id,
           $txid,
           $output->getValue(),
           $o,
-          $outputScript->getAsm(),
-          $outputScript->getBuffer()->getHex(),
           $reqSigs,
-          $outputType];
+          $outputType,
+          $hexgz
+        ];
 
         if (!$vout_id) {
-
           $voSql = "insert into transactions_vouts ".
-            "(transaction_id, txid, value, n, asm, hex, reqSigs, type)".
-            " values (?, ?, ?, ?, ?, ?, ?, ?)";
-          $vout_id = $db->insert($voSql, $voFlds);
+            "(transaction_id, txid, value, n, reqSigs, type, hexgz)".
+            " values (?, ?, ?, ?, ?, ?, ?)";
+
+          if ($outputType == 'sketchy') {
+            $voFlds[(count($voFlds) - 1)] = "";
+            $vout_id = $db->insert($voSql, $voFlds);
+          } else {
+            $vout_id = $db->insert($voSql, $voFlds);
+          }
 
         } else {
-
           $voSql = "update transactions_vouts set transaction_id = ?, txid = ?, ".
-            "value = ?, n = ?, asm = ?, hex = ?, reqSigs = ?, type = ? where vout_id = ?";
-
+            "value = ?, n = ?, reqSigs = ?, type = ?, hexgz = ? where vout_id = ?";
           $voFlds[0] = $voFlds[0].'i';
           $voFlds[] = $vout_id;
 
-          $db->update($voSql, $voFlds);
-
+          if ($outputType == 'sketchy') {
+            $voFlds[(count($voFlds) - 2)] = "";
+            $db->update($voSql, $voFlds);
+          } else {
+            $db->update($voSql, $voFlds);
+          }
         }
 
-        $address_id = getAddressId($output->getAddressString());
-        //note: add unique index to transactions_vouts_addresses
-        $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
-        $db->insert($aisql, ['ii', $vout_id, $address_id]);
+        if ($outputType !== 'sketchy') {
+          $address_id = getAddressId($output->getAddressString());
+          //note: add unique index to transactions_vouts_addresses
+          $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
+          $db->insert($aisql, ['ii', $vout_id, $address_id]);
+        }
 
       }
 
@@ -232,9 +256,6 @@ if (file_exists($configFile)) {
         $inputScript = $input->getScript();
 
         if ($inputTxid !== "0000000000000000000000000000000000000000000000000000000000000000" && is_numeric($inputVout)) {
-          //$vinsId = $vin->txid."-".$vin->vout;
-
-          //echo "Input $i - ",$inputTxid, " -> ", $inputVout, "\n";
 
           $vin_id = $db->value("select vin_id ".
             "from transactions_vins ".
@@ -318,6 +339,8 @@ if (file_exists($configFile)) {
 
     } // end transaction
     $x += 1;
+    //die;
+
   } while (!empty($nextBlockHash));
 
 

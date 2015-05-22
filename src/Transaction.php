@@ -66,13 +66,6 @@ class Transaction extends Object {
 
   /**
   *
-  * @var int $confirmations confirmations
-  * @since 0.1.0
-  */
-  public $confirmations;
-
-  /**
-  *
   * @var string $blockhash hash of the accepting block
   * @since 0.1.0
   */
@@ -84,6 +77,13 @@ class Transaction extends Object {
   * @since 0.1.0
   */
   public $blocktime;
+
+  /**
+  *
+  * @var int $blockheight block height
+  * @since 0.1.0
+  */
+  public $blockheight;
 
   /**
   *
@@ -223,9 +223,9 @@ class Transaction extends Object {
       "txid" => $this->txid,
       "amount" => $this->amount,
       "fee" => $this->fee,
-      "confirmations" => $this->confirmations,
       "blockhash" => $this->blockhash,
       "blocktime" => $this->blocktime,
+      "blockheight" => $this->blockheight,
       "time" => $this->time,
       "vin" => $vinArr,
       "vout" => $voutArr
@@ -261,7 +261,7 @@ class Transaction extends Object {
       $arr = (object) $arr;
     }
 
-    $flds = ["txid", "amount", "confirmations", "blockhash", "blocktime", "time"];
+    $flds = ["txid", "amount", "blockheight", "blockhash", "blocktime", "time"];
     foreach ($flds as $fld) {
       if (isset($arr->{$fld}))
         $this->{$fld} = $arr->{$fld};

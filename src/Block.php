@@ -35,13 +35,6 @@ class Block extends Object {
   public $hash;
 
   /**
-  * confirmations
-  * @var int $confirmations
-  * @since 0.1.0
-  */
-  public $confirmations;
-
-  /**
   * size
   * @var float $size
   * @since 0.1.0
@@ -222,7 +215,6 @@ class Block extends Object {
   {
     $arr = [
       'hash' => $this->hash,
-      'confirmations' => $this->confirmations,
       'size' => $this->size,
       'height' => $this->height,
       'version' => $this->version,
@@ -254,7 +246,6 @@ class Block extends Object {
     }
 
     $this->hash = $arr->hash;
-    $this->confirmations = $arr->confirmations;
     $this->size = $arr->size;
     $this->height = $arr->height;
     $this->version = $arr->version;

@@ -78,6 +78,15 @@ class TransactionOutput extends Object
   */
   public $hex;
 
+
+  /**
+  * hex
+  * @var string $hex gzcompressed
+  * @since 0.1.0
+  */
+  public $hexgz;
+
+
   /**
   * required signatures
   * @var int $reqSigs number of required signatures

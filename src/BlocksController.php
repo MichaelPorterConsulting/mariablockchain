@@ -119,16 +119,15 @@ class BlocksController extends Object
           $transaction_ids = $this->getTransactionIds($block);
         } else { //insert genesis block special
           $insertTransactionSQL = 'insert into transactions '.
-            '(confirmations, '.
+            '('.
               'blockhash, '.
               'blocktime, '.
               'txid, '.
               'time, '.
               'inwallet'.
-            ') values (?, ?, ?, ?, ?, ?)';
+            ') values (?, ?, ?, ?, ?)';
 
-          $insertTransactionFlds = ['issssi',
-            $block->confirmations,
+          $insertTransactionFlds = ['ssssi',
             $block->blockhash,
             $block->time,
             $block->tx[0],
@@ -200,9 +199,7 @@ class BlocksController extends Object
     $cached = $this->bc->cache->get("block:$blockhash");
 
     if ($cached !== false && $refresh === false) {
-
       $block = new Block($this->bc, $cached);
-
     } else {
       $this->trace("loading block from blockhash");
       $block = new Block($this->bc, $blockhash);

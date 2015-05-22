@@ -15,7 +15,6 @@ require_once "Transaction.php";
 require_once "TransactionInput.php";
 require_once "TransactionOutput.php";
 
-
 /**
  * Methods relating to transactions
  * @author willgriffin <https://github.com/willgriffin>
@@ -158,7 +157,8 @@ class TransactionsController extends Object
           $block = (object)[
             'hash' => "",
             'block_id' => 0,
-            'time' => 0
+            'time' => 0,
+            'height' => 0
           ];
         }
 
@@ -240,6 +240,8 @@ class TransactionsController extends Object
           if ($info->time > $block->time) {
             $info->time = $block->time;
           }
+
+          $info->height = $block->height;
 
           if (is_object($block) && is_numeric($block->block_id)) {
             $usql = "update transactions set block_id = ?, blockhash = ?, time = ?, last_updated = now() where transaction_id = ?";
@@ -371,16 +373,15 @@ class TransactionsController extends Object
     if (!$vout_id) {
 
       $vosql = "insert into transactions_vouts ".
-        "(transaction_id, txid, value, n, asm, hex, reqSigs, type)".
-        " values (?, ?, ?, ?, ?, ?, ?, ?)";
+        "(transaction_id, txid, value, n, hexgz, reqSigs, type)".
+        " values (?, ?, ?, ?, ?, ?, ?)";
 
       $voflds = ['isiissis',
         $tx->transaction_id,
         $tx->txid,
         $vout->value,
         $vout->n,
-        $vout->scriptPubKey->asm,
-        $vout->scriptPubKey->hex,
+        $hexgz,
         $vout->scriptPubKey->reqSigs,
         $vout->scriptPubKey->type];
 

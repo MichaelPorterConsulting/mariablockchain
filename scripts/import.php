@@ -3,6 +3,7 @@
 
 require_once __DIR__."/../vendor/autoload.php";
 
+use BitWasp\Bitcoin\Address\AddressFactory;
 use BitWasp\Bitcoin\Rpc\RpcFactory;
 use BitWasp\Bitcoin\Chain\Difficulty;
 use BitWasp\Bitcoin\Math\Math;
@@ -91,7 +92,6 @@ if (file_exists($configFile)) {
       $block_id = $db->insert($bsql, $bvals);
 
     } else {
-
 
       $bsql = "update blocks set ".
         "time = ?, hash = ?, size = ?, height = ?, version = ?, ".
@@ -233,12 +233,12 @@ if (file_exists($configFile)) {
         }
 
         if ($outputType !== 'sketchy') {
-          $address_id = getAddressId($output->getAddressString());
-          //note: add unique index to transactions_vouts_addresses
-          $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
-          $db->insert($aisql, ['ii', $vout_id, $address_id]);
+            $address = AddressFactory::getAssociatedAddress($output->getScript(), $network);
+            //echo $address,"\n";
+            $address_id = getAddressId($address);
+            $aisql = "insert into transactions_vouts_addresses (vout_id, address_id) values (?, ?)";
+            $db->insert($aisql, ['ii', $vout_id, $address_id]);
         }
-
       }
 
       /*
@@ -339,8 +339,6 @@ if (file_exists($configFile)) {
 
     } // end transaction
     $x += 1;
-    //die;
-
   } while (!empty($nextBlockHash));
 
 

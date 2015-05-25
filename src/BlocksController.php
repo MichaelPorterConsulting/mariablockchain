@@ -226,4 +226,19 @@ class BlocksController extends Object
     return $info;
   }
 
+  public function getLast()
+  {
+    $lastHash = $this->bc->cache->get($this->bc->name.':lastblock');
+    if (empty($lastHash)) {
+      $lastHash = $this->bc->rpc->getbestblockhash();
+      $this->setLast($lastHash);
+    }
+    return $lastHash
+  }
+
+  public function setLast($hash)
+  {
+    $this->bc->cache->set($this->bc->name.':lastblock', $hash);
+  }
+
 }

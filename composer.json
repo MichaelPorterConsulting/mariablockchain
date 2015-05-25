@@ -28,7 +28,7 @@
 		"monolog/monolog": "1.*",
 		"willgriffin/mariainterface": "dev-master",
 		"nbobtc/bitcoind-php": "~1.2@dev",
-		"bitwasp/bitcoin-lib": "1.2.0",
+		"bitwasp/bitcoin-lib": "dev-master",
 		"bitwasp/bitcoin": "dev-master"
 	},
 	"require-dev": {

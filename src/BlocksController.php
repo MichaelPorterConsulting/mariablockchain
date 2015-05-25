@@ -233,7 +233,7 @@ class BlocksController extends Object
       $lastHash = $this->bc->rpc->getbestblockhash();
       $this->setLast($lastHash);
     }
-    return $lastHash
+    return $lastHash;
   }
 
   public function setLast($hash)
